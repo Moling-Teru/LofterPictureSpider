@@ -1,5 +1,5 @@
 images
-___pycache__
+__pycache__
 *.json
 *.txt
 test.py
