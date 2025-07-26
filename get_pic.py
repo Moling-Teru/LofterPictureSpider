@@ -8,8 +8,8 @@ s.mount('https://', HTTPAdapter(max_retries=3))
 proxypool_url = "http://localhost:5555/random"
 
 
-def get_random_proxy() -> dict:
-    proxy = requests.get(proxypool_url).text.strip()
+def get_random_proxy(url: str) -> dict:
+    proxy = requests.get(url).text.strip()
     proxies = {'http': 'http://' + proxy}
     return proxies
 
@@ -33,7 +33,7 @@ def get_pic(url: str, save_path: str) -> None:
         address = url.split('/')[3]
         url = url.replace(f'http://nos.netease.com/{address}',f'https://{address}.lf127.net')
     try:
-        response = s.get(url, timeout=30, headers=headers, params=params, proxies=get_random_proxy())
+        response = s.get(url, timeout=30, headers=headers, params=params, proxies=get_random_proxy(proxypool_url))
         response.raise_for_status()  # 检查请求是否成功
         with open(save_path, 'wb') as f:
             f.write(response.content)

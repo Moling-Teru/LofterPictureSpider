@@ -1,5 +1,11 @@
 import requests
+from requests.adapters import HTTPAdapter
+import get_pic
 from typing import Dict, Any, Optional
+
+s = requests.Session()
+s.mount('http://', HTTPAdapter(max_retries=3))
+s.mount('https://', HTTPAdapter(max_retries=3))
 
 def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
     """
@@ -13,6 +19,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
         Optional[Dict[str, Any]]: 帖子详情的原始JSON数据，如果请求失败则返回None
     """
     url = "https://api.lofter.com/oldapi/post/detail.api"
+    proxy_url = 'http://localhost:5555/random'
     
     # 构建请求头
     headers = {
@@ -42,12 +49,13 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
     
     try:
         # 发送POST请求
-        response = requests.post(
+        response = s.post(
             url=url,
             headers=headers,
             params=params,
             data=body_data,
-            timeout=30
+            timeout=30,
+            proxies=get_pic.get_random_proxy(proxy_url)
         )
         
         # 检查响应状态码
