@@ -1,0 +1,5 @@
+images
+___pycache__
+*.json
+*.txt
+test.py
