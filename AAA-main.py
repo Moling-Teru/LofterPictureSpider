@@ -6,6 +6,9 @@ import resolve_url
 import get_pic
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Pool
+import color
+from typing import Dict, Any, Optional, List
+cl = color.Color()
 
 def get_time():
     time = datetime.datetime.now()
@@ -20,12 +23,12 @@ def check_folder() -> str:
         os.makedirs(path)
     return path
 
-def get_url(id: list[int,str]) -> str | None:
+def get_url(id: tuple[int, Any]) -> str | None:
     try:
         print(f"帖子ID & 作者域名: {id}")
-        js_result = simple_get_post_details.get_post_details(id[0], id[1])
-        url = resolve_url.resolve(js_result)
-    except KeyError:
+        js_result = simple_get_post_details.get_post_details(id[0], id[1])  #先拉取整个帖子的json
+        url = resolve_url.resolve(js_result)  #再初步解析整个帖子中的图片链接部分
+    except (KeyError, ValueError):
         url = None
     return url
 
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     }
     path = check_folder()
 
-    for i in range(3): # 这里循环n次，抓取10*n个帖子
+    for i in range(3): # 这里循环n次，抓取10*n个帖子（包含可能的文字/视频帖）
         # 调用LOFTER API，抓取tag下内容
         response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*i)
         if not response:
@@ -59,8 +62,12 @@ if __name__ == "__main__":
             id_all.append(id)
         with Pool(5) as p:   #可设置最大进程数
             url_all = p.map(get_url,id_all)
+        none_all = url_all.count(None)
         url_all = list(filter(None, url_all))
-        print(f"获取帖子URL完成: {get_time()}, 共{len(url_all)}项。")
+        if none_all:
+            print(f"获取帖子URL完成: {get_time()}, 共{len(url_all)}项。{cl.get_colour('RED')}有{none_all}项无效链接。{cl.reset()}")
+        else:
+            print(f"获取帖子URL完成: {get_time()}, 共{len(url_all)}项。{cl.get_colour('GREEN')}全部链接有效。{cl.reset()}")
 
         # 个人主页中包含所有图片链接，批量下载图片
         # 先获取图片链接

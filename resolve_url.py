@@ -1,4 +1,8 @@
-def resolve(content: str) -> str:
+from typing import Optional
+
+def resolve(content: Optional[dict]) -> str:
+    if content is None:
+        raise ValueError("内容为空，无法解析图片URL")
     try:
         url_all = content['response']['posts'][0]['post']['photoLinks']
         return url_all
