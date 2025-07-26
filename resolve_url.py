@@ -10,14 +10,16 @@ def resolve(content: Optional[dict]) -> str:
         raise ValueError("无法解析图片URL，缺少必要的字段")
     
 
-def fetch(url_all : list) -> list:
+def fetch(url_all : list) -> tuple[list,int]:
     import json
     re = []
+    error_count = 0
     for i in url_all:
         _full = json.loads(i)
         for full in _full:
             try:
                 re.append(full['raw'])
             except KeyError:
+                error_count += 1
                 continue
-    return re
+    return re, error_count

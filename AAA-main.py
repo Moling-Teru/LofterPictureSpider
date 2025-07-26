@@ -1,6 +1,6 @@
 import lofter_api
 import extract_post_ids
-import datetime
+import datetime, time
 import simple_get_post_details
 import resolve_url
 import get_pic
@@ -33,10 +33,11 @@ def get_url(id: tuple[int, Any]) -> str | None:
     return url
 
 if __name__ == "__main__":
-    print(f":{get_time()}：开始抓取LOFTER帖子ID。")
+    start_time=time.time()
+    print(f"{get_time()}：开始抓取LOFTER帖子ID。")
 
     optional_header={
-        'tag': 'logos', # 标签，自行填写
+        'tag': '浅羽悠真', # 标签，自行填写
         'type': 'total' #date, week, month, total
     }
     path = check_folder()
@@ -72,9 +73,12 @@ if __name__ == "__main__":
         # 个人主页中包含所有图片链接，批量下载图片
         # 先获取图片链接
         print(f"{get_time()} 开始下载图片...")
-        urls = resolve_url.fetch(url_all)
-        print(f"获取图片链接完成, 共{len(urls)}项。")
-        
+        urls, errors = resolve_url.fetch(url_all)
+        if errors:
+            print(f"获取图片URL完成: {get_time()}, 共{len(urls)}项。{cl.get_colour('RED')}有{errors}项无效链接。{cl.reset()}")
+        else:
+            print(f"获取图片URL完成: {get_time()}, 共{len(urls)}项。{cl.get_colour('GREEN')}全部链接有效。{cl.reset()}")
+
         # 使用多线程下载图片
         max_workers = 5  # 设置最大工作线程数，可根据需要调整
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -97,4 +101,9 @@ if __name__ == "__main__":
                     print(f"进度: {completed_count}/{total_count} - 图片 {j+1} 下载失败: {exc}")
 
         print(f"下载图片完成: {get_time()}")
-        
+        print(cl.get_colour('CYAN'))
+        print('\n' + f'=' * 80 + '\n')
+        print(cl.reset())
+
+    end_time = time.time()
+    print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒{cl.reset()}")
