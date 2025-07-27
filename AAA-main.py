@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, List
 
 cl = color.Color()
 
+# 需要使用代理，此代码使用Python3WebSpider / ProxyPool (Github)
+
 def get_time():
     time = datetime.datetime.now()
     return time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
@@ -60,12 +62,13 @@ if __name__ == "__main__":
 
     for i in range(load_config('turn')): # 这里循环n次，抓取10*n个帖子（包含可能的文字/视频帖）
         # 调用LOFTER API，抓取tag下内容
+        print(f"{cl.get_colour('BLUE')}抓取第{i+1}次: {get_time()}{cl.reset()}")
         response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*i)
 
         if not response:
             raise RuntimeError("没有获取到数据，可能是网络问题或API错误")
         
-        print(f"抓取完成: {get_time()}")
+        print(f"抓取tag完成: {get_time()}")
 
         print(f'{get_time()} 开始分析帖子ID...')
 

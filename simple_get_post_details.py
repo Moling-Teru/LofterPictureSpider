@@ -55,7 +55,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
             params=params,
             data=body_data,
             timeout=30,
-            proxies=get_pic.get_random_proxy(proxy_url)
+            proxies=get_pic.get_random_proxy(proxy_url)  # 不需要代理可以删除
         )
         
         # 检查响应状态码
