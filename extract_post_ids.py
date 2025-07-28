@@ -1,5 +1,6 @@
 import json
-from typing import Generator, Dict, Any, List
+from typing import Generator, Dict, Any, List, Optional
+
 
 def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], None, None]:
     """
@@ -39,3 +40,17 @@ def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], N
         print(f"JSON文件格式错误")
     except Exception as e:
         print(f"读取文件时发生错误: {e}")
+
+def get_likes(data: Dict[str, Any]) -> Optional[int]:
+    try:
+        likes = data['data']['list'][0]['postData']['postCount']['favoriteCount']
+        return likes
+    except json.JSONDecodeError:
+        print(f"JSON文件格式错误")
+        return None
+    except KeyError as e:
+        print(f"跳过格式异常的项目，缺少字段: {e}")
+        return None
+    except Exception as e:
+        print(f'发生未知错误: {e}')
+        return None

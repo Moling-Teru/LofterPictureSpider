@@ -126,7 +126,7 @@ def main_launcher():
         thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i))
         threads.append(thread)
         thread.start()
-        time.sleep(0.2) # 短暂间隔，避免瞬间启动大量线程
+        time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
 
     # 等待所有管理线程执行完毕
     for thread in threads:

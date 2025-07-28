@@ -66,7 +66,21 @@ def main(optional_header: Dict[str, str]) -> None:
 
     # 交给extract_post_ids处理，分析帖子ID
     posts = extract_post_ids.extract_post_ids_with_photos(response)
+    likes = extract_post_ids.get_likes(response)
     print(f"分析完成: {get_time()}")
+
+    # 处理喜欢数不满足跳出
+    aim_likes = load_config('likes')
+    if aim_likes is not None:
+        if likes is None:
+            print(f"{cl.get_colour('RED')}无法获取喜欢数。{cl.reset()}目前继续抓取。")
+            pass
+        elif likes < aim_likes:
+            print(f"{cl.get_colour('YELLOW')}喜欢数({likes})小于目标值({aim_likes})，跳过本次抓取。{cl.reset()}")
+            time.sleep(1.5)  # 等待1.5秒
+            sys.exit(0)
+        else:
+            print(f"{cl.get_colour('GREEN')}喜欢数({likes})满足目标值({aim_likes})，继续抓取。{cl.reset()}")
 
     #Lofter此处逻辑为调用API找到信息流对应个人主页链接
     url_all = []
@@ -141,6 +155,6 @@ if __name__ == "__main__":
 
     end_time = time.time()
     print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒{cl.reset()}")
-    time.sleep(1.5)
+    time.sleep(1)
     sys.exit(0)
     #完美结束！
