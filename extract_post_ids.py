@@ -1,5 +1,6 @@
 import json
 from typing import Generator, Dict, Any, List, Optional
+import time
 
 
 def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], None, None]:
@@ -53,4 +54,6 @@ def get_likes(data: Dict[str, Any]) -> Optional[int]:
         return None
     except Exception as e:
         print(f'发生未知错误: {e}')
+        print(data)
+        time.sleep(3)
         return None

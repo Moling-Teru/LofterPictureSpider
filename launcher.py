@@ -40,7 +40,7 @@ WORKER_SCRIPT = "Amain.py"
 MAX_CONCURRENT_PROCESSES = 5
 
 # 3. 你想要运行的总次数
-TOTAL_RUNS = load_config('turn')
+TOTAL_RUNS : list = load_config('turn')
 
 # 4. 设置路径
 CHECK_FOLDER = check_folder(load_config('tag'))
@@ -98,11 +98,15 @@ def run_worker_in_new_terminal(semaphore, run_index):
 
             # 在Windows上，creationflags=flags 会被使用
             # 在其他系统上，这个参数会被忽略
-            process = subprocess.Popen(command, creationflags=flags)
+            if command is not None:
+                process = subprocess.Popen(command, creationflags=flags)
 
-            process.wait()
+                process.wait()
 
-            print(f"[启动器] 第 {run_index + 1} 次运行已完成，资源已释放。")
+                print(f"[启动器] 第 {run_index + 1} 次运行已完成，资源已释放。")
+
+            else:
+                raise RuntimeError("无法获取平台特定的命令配置。")
 
         except Exception as e:
             print(f"[启动器] 运行第 {run_index + 1} 次时出错: {e}")
@@ -120,13 +124,13 @@ def main_launcher():
     threads = []
     print(f"准备开始 {TOTAL_RUNS} 次运行，最大并发数: {MAX_CONCURRENT_PROCESSES}")
     
-    for i in range(TOTAL_RUNS):
+    for i in range(TOTAL_RUNS[0], TOTAL_RUNS[1]):
         # 为每一次运行创建一个管理线程
         # 这个线程的工作就是启动worker进程并等待它结束
         thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i))
         threads.append(thread)
         thread.start()
-        time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+        time.sleep(1.5) # 短暂间隔，避免瞬间启动大量线程
 
     # 等待所有管理线程执行完毕
     for thread in threads:
