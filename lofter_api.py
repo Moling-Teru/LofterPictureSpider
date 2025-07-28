@@ -1,6 +1,7 @@
 import requests
 import json
 from typing import Dict, Any, Optional
+import get_pic
 
 def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, Any]]:
     """
@@ -47,7 +48,8 @@ def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, 
             url=url,
             headers=headers,
             data=body_data,
-            timeout=30
+            timeout=30,
+            proxies=get_pic.get_random_proxy('http://localhost:5555/random')  # 不需要代理可以删除
         )
         
         # 检查响应状态码

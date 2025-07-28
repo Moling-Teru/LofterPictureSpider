@@ -1,4 +1,4 @@
-tag: 丹穹
+tag: 波提欧
 type: total        #可以在date, week, month, total中选择
 
-turn: 100        #抓取帖子数（填入n，抓取n*10个帖子） 必须保证为整数
+turn: 3       #抓取帖子数（填入n，抓取n*10个帖子） 必须保证为整数

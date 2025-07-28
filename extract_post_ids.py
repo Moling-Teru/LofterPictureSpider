@@ -1,7 +1,7 @@
 import json
-from typing import Generator, Dict, Any, Union
+from typing import Generator, Dict, Any, List
 
-def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[Union[int, str], None, None]:
+def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], None, None]:
     """
     从已解析的JSON数据中提取包含照片的帖子ID
     
