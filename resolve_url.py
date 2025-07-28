@@ -1,6 +1,7 @@
 from typing import Optional
 
 def resolve(content: Optional[dict]) -> str:
+    #print('Resolving!')
     if content is None:
         raise ValueError("内容为空，无法解析图片URL")
     try:

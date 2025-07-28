@@ -4,6 +4,7 @@ import sys
 import time
 from typing import Any
 import datetime
+import color
 
 def load_config(target:str) -> Any:
     import yaml
@@ -30,7 +31,7 @@ def check_folder(tag: str) -> str:
 
     return path
 
-
+cl=color.Color()
 # --- 配置区 ---
 # 1. 要运行的工作脚本文件名
 WORKER_SCRIPT = "Amain.py"
@@ -57,12 +58,10 @@ def get_platform_command(script_name, run_index):
         # Windows系统: 使用 'start /wait' 命令在新 cmd 窗口中运行
         # 'start /wait' 会等待新窗口的进程结束后才返回
         # 'cmd /c' 表示执行完命令后关闭窗口
-        return ["cmd", "/c", "start", "/wait", "cmd", "/c", f'{python_command} & exit']
-        # 解释:
-        # start /wait: 在新窗口运行，并等待它结束
-        # cmd /c: 运行后面的命令然后关闭
-        # python_command: 你的脚本
-        # & exit: 任务结束后自动退出。
+        return {
+            "command": python_command,
+            "flags": subprocess.CREATE_NEW_CONSOLE
+        }
 
     elif sys.platform == "darwin":
         # macOS系统: 使用 AppleScript 来告诉终端(Terminal.app)执行新命令
@@ -90,20 +89,21 @@ def run_worker_in_new_terminal(semaphore, run_index):
     """
     with semaphore:  # with语句会自动处理acquire和release
         print(f"[启动器] 正在分配资源给第 {run_index + 1} 次运行...")
-        
+
         try:
-            command = get_platform_command(WORKER_SCRIPT, run_index)
-            
-            # 使用 subprocess.Popen 启动一个完全独立的进程，它不会阻塞启动器
-            # 我们不需要捕获它的输出，因为输出在它自己的新终端里
-            process = subprocess.Popen(command)
-            
-            # 等待这个在新终端里启动的进程结束
-            # 这会阻塞当前线程，直到信号量被释放，但不会阻塞主线程
+            platform_config = get_platform_command(WORKER_SCRIPT, run_index)
+
+            command = platform_config.get("command")
+            flags = platform_config.get("flags", 0)  # 默认为0，即无特殊标志
+
+            # 在Windows上，creationflags=flags 会被使用
+            # 在其他系统上，这个参数会被忽略
+            process = subprocess.Popen(command, creationflags=flags)
+
             process.wait()
-            
+
             print(f"[启动器] 第 {run_index + 1} 次运行已完成，资源已释放。")
-            
+
         except Exception as e:
             print(f"[启动器] 运行第 {run_index + 1} 次时出错: {e}")
 
@@ -126,7 +126,7 @@ def main_launcher():
         thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i))
         threads.append(thread)
         thread.start()
-        time.sleep(0.1) # 短暂间隔，避免瞬间启动大量线程
+        time.sleep(0.2) # 短暂间隔，避免瞬间启动大量线程
 
     # 等待所有管理线程执行完毕
     for thread in threads:
@@ -136,5 +136,9 @@ def main_launcher():
 
 
 if __name__ == "__main__":
+    start_time  = time.time()
     import os
     main_launcher()
+    end_time = time.time()
+    print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒")
+    print(f"图片保存路径: {CHECK_FOLDER}{cl.reset()}")

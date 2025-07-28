@@ -5,7 +5,7 @@ import simple_get_post_details
 import resolve_url
 import get_pic
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from multiprocessing import Pool
+#from multiprocessing import Pool
 import color
 from typing import Dict, Any, Optional, List
 import argparse
@@ -22,8 +22,9 @@ def get_time():
 
 
 
-def get_url(id: tuple[int, Any]) -> str | None:
+def get_url(id: List) -> str | None:
     try:
+        #print('Into the get_url function!')
         js_result = simple_get_post_details.get_post_details(id[0], id[1])  #先拉取整个帖子的json
         url = resolve_url.resolve(js_result)  #再初步解析整个帖子中的图片链接部分
         print(f"帖子ID & 作者域名: {id}")
@@ -69,15 +70,17 @@ def main(optional_header: Dict[str, str]) -> None:
 
     #Lofter此处逻辑为调用API找到信息流对应个人主页链接
     url_all = []
-    id_all = []
+    #id_all = []
     print(f"{get_time()} 开始获取帖子URL...")
 
-    for id in posts:
-        print('Working!') # 调试
-        id_all.append(id) # 神奇逻辑...先把这个坑这么填吧
+    #for id in posts:
+        #print('Working!') # 调试
+        #id_all.append(id) # 神奇逻辑...先把这个坑这么填吧
     
-    with Pool(3) as p:   #可设置最大进程数
-        url_all = p.map(get_url,id_all)
+    #with Pool(3) as p:   #可设置最大进程数     # f*ck multiprocessing
+        #url_all = p.map(get_url,id_all)
+    for id in posts:
+        url_all.append(get_url(id))  # 使用get_url函数获取每个帖子的URL
     none_all = url_all.count(None)
     url_all = list(filter(None, url_all))
 
@@ -134,7 +137,6 @@ if __name__ == "__main__":
         'type': load_config('type') #date, week, month, total
     }
 
- # 这里循环n次，抓取10*n个帖子（包含可能的文字/视频帖）
     main(optional_header)
 
     end_time = time.time()
