@@ -55,7 +55,7 @@ def main(optional_header: Dict[str, str]) -> None:
 
     # 调用LOFTER API，抓取tag下内容
     print(f"{cl.get_colour('BLUE')}抓取帖子ID-第{i+1}次: {get_time()}{cl.reset()}")
-    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=i)
+    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*i)
 
     if not response:
         raise RuntimeError("没有获取到数据，可能是网络问题或API错误")
