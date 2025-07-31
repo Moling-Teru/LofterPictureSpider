@@ -3,7 +3,7 @@ from typing import Generator, Dict, Any, List, Optional
 import time
 
 
-def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], None, None]:
+def extract_post_ids(data: Dict[str, Any]) -> Generator[tuple[List[Any], int], None]:
     """
     从已解析的JSON数据中提取包含照片的帖子ID
     
@@ -25,13 +25,24 @@ def extract_post_ids_with_photos(data: Dict[str, Any]) -> Generator[List[Any], N
                 # 获取photoCount
                 photo_count = item['postData']['postView']['photoCount']
                 
-                # 如果photoCount为0，跳过该项
-                if photo_count == 0:
-                    continue
+                # 如果photoCount为0
+                if photo_count == 0:  #todo 直接尝试返回最后一步所需的所有内容
+                    if item['postData']['postView'].get('videoPostView', None):
+                        post = [item['postData']['postView']['videoPostView']['videoInfo']['originUrl'],
+                                item['postData']['postView']['id'],
+                                item['blogInfo']['blogName'],
+                                item['postData']['postView']['title'],
+                                0], 2  # 视频 URL,ID,域名,标题,是否付费
+                        yield post
+                    else:
+                        post = [item['postData']['postView']['id'], item['blogInfo']['blogName']], 0  #文字
+                        yield post
+                    
                 
                 # 如果photoCount不为0，返回post ID
-                post = [item['postData']['postView']['id'],item['blogInfo']['blogName']]
-                yield post
+                else:
+                    post = [item['postData']['postView']['id'],item['blogInfo']['blogName']], 1  #图片
+                    yield post
                 
             except KeyError as e:
                 print(f"跳过格式异常的项目，缺少字段: {e}")

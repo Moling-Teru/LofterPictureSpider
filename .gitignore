@@ -3,3 +3,5 @@ __pycache__
 *.json
 *.txt
 test.py
+*.html
+contents

@@ -19,13 +19,13 @@ def load_config(target:str) -> Any:
 def check_folder(tag: str) -> str:
     import os
 
-    if not os.path.exists('images'):
-        os.makedirs('images')
+    if not os.path.exists('contents'):
+        os.makedirs('contents')
 
-    if not os.path.exists(f'images/tag-{tag}'):
-        os.makedirs(f'images/tag-{tag}')
+    if not os.path.exists(f'contents/tag-{tag}'):
+        os.makedirs(f'contents/tag-{tag}')
 
-    path=f'images/tag-{tag}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+    path=f'contents/tag-{tag}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -37,7 +37,7 @@ cl=color.Color()
 WORKER_SCRIPT = "Amain.py"
 
 # 2. 限制同时运行的最大进程数
-MAX_CONCURRENT_PROCESSES = 5
+MAX_CONCURRENT_PROCESSES = 3
 
 # 3. 你想要运行的总次数
 TOTAL_RUNS : list = load_config('turn')

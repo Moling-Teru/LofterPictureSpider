@@ -1,6 +1,6 @@
 import requests
 from requests.adapters import HTTPAdapter
-import get_pic
+import just_get_it
 from typing import Dict, Any, Optional
 
 s = requests.Session()
@@ -56,7 +56,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
             params=params,
             data=body_data,
             timeout=30,
-            proxies=get_pic.get_random_proxy(proxy_url)  # 不需要代理可以删除
+            proxies=just_get_it.get_random_proxy(proxy_url)  # 不需要代理可以删除
         )
         #print('Get!')
         # 检查响应状态码
@@ -64,6 +64,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
         
         # 检查响应内容是否为空
         if not response.text.strip():
+            print('响应为空。')
             return None
         
         # 返回原始JSON响应
@@ -71,6 +72,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
         
         # 检查API返回的状态
         if 'meta' in json_data and json_data['meta'].get('status') != 200:
+            print(f'状态码异常({json_data['meta'].get('status')})。')
             return None
             
         return json_data
@@ -79,3 +81,19 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
         # 静默处理所有异常，返回None
         print(f'未知异常：{str(e)}')
         return None
+    
+
+# 测试区域
+if __name__ == "__main__":
+    # 测试获取帖子详情
+    post_id = 11791583334  # 替换为实际的帖子ID
+    blog_domain = "changge45zj"  # 替换为实际的博客域名
+    
+    post_details = get_post_details(post_id, blog_domain)
+    
+    if post_details:
+        with open('post_details_paid.json', 'w', encoding='utf-8') as f:
+            import json
+            json.dump(post_details, f, ensure_ascii=False, indent=4)
+    else:
+        print("获取帖子详情失败或返回数据为空")
