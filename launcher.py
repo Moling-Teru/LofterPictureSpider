@@ -5,6 +5,8 @@ import time
 from typing import Any
 import datetime
 import color
+import os
+import shutil
 
 def load_config(target:str) -> Any:
     import yaml
@@ -28,6 +30,8 @@ def check_folder(tag: str) -> str:
     path=f'contents/tag-{tag}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
     if not os.path.exists(path):
         os.makedirs(path)
+
+    shutil.copy('config.yaml', f'{path}/config.yaml')
 
     return path
 
@@ -83,12 +87,12 @@ def get_platform_command(script_name, run_index):
         raise NotImplementedError(f"不支持的操作系统: {sys.platform}")
 
 
-def run_worker_in_new_terminal(semaphore, run_index):
+def run_worker_in_new_terminal(semaphore, run_index, run_times: int):
     """
     一个线程的目标函数，用于获取信号量、启动子进程并等待其完成。
     """
     with semaphore:  # with语句会自动处理acquire和release
-        print(f"[启动器] 正在分配资源给第 {run_index + 1} 次运行...")
+        print(f"[启动器] 正在分配资源给第 {run_times} 次运行（范围{run_index * 10 + 1}-{run_index * 10 + 10}）...")
 
         try:
             platform_config = get_platform_command(WORKER_SCRIPT, run_index)
@@ -103,13 +107,13 @@ def run_worker_in_new_terminal(semaphore, run_index):
 
                 process.wait()
 
-                print(f"[启动器] 第 {run_index + 1} 次运行已完成，资源已释放。")
+                print(f"[启动器] 第 {run_times} 次运行已完成，资源已释放。")
 
             else:
                 raise RuntimeError("无法获取平台特定的命令配置。")
 
         except Exception as e:
-            print(f"[启动器] 运行第 {run_index + 1} 次时出错: {e}")
+            print(f"[启动器] 运行第 {run_times} 次时出错: {e}")
 
 
 def main_launcher():
@@ -122,15 +126,17 @@ def main_launcher():
     semaphore = threading.Semaphore(MAX_CONCURRENT_PROCESSES)
     
     threads = []
+    run_times = 0
     print(f"准备开始 {TOTAL_RUNS} 次运行，最大并发数: {MAX_CONCURRENT_PROCESSES}")
     
     for i in range(TOTAL_RUNS[0], TOTAL_RUNS[1]):
         # 为每一次运行创建一个管理线程
         # 这个线程的工作就是启动worker进程并等待它结束
-        thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i))
+        run_times += 1
+        thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
         threads.append(thread)
         thread.start()
-        time.sleep(1.5) # 短暂间隔，避免瞬间启动大量线程
+        time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
 
     # 等待所有管理线程执行完毕
     for thread in threads:
@@ -140,8 +146,7 @@ def main_launcher():
 
 
 if __name__ == "__main__":
-    start_time  = time.time()
-    import os
+    start_time = time.time()
     main_launcher()
     end_time = time.time()
     print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒")
