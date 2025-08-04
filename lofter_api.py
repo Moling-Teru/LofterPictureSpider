@@ -125,6 +125,9 @@ def request_lofter_with_custom_params(body_params: Dict[str, str] ,offset: int) 
         if not response.text.strip():
             print("响应内容为空")
             return None
+
+        if response.json()['data']['offset'] == -1:
+            return None
             
         return response.json()
         
