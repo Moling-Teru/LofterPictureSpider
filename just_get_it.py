@@ -18,6 +18,8 @@ def get_random_proxy(url: str) -> dict:
 
 
 def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int) -> None:
+    log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
+    log_file = f"{log_path}/download_log_{i}.txt"
     headers = {
         "User-Agent": "Reqable/2.21.1",
         "accept-encoding": "gzip"
@@ -37,8 +39,6 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
             f.write(response.content)
         print(f"成功下载图片: {url}")
 
-        log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
-        log_file = f"{log_path}/download_log_{i}.txt"
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}, Path: {save_path}\n")
 
@@ -46,11 +46,15 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
         print(f"下载图片失败: {url}，错误信息：{e}")
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
+        with open(log_file, 'a', encoding='utf-8') as log:
+            log.write(f"Error Downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
 
 
 def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gift: str, i: int) -> None:# 文字
     try:
         content = url
+        log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
+        log_file = f"{log_path}/download_log_{i}.txt"
         if '<p' not in content:
             raise ValueError("内容格式错误，请确保内容包含HTML标签。")
         doc = dominate.document(title=title)
@@ -62,15 +66,16 @@ def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gi
         with open(f'{save_path.split('.')[0]}.html', 'w', encoding='utf-8') as f:
             f.write(str(doc))
         print(f"成功保存文字内容: {save_path.split('.')[0]}.html")
-        log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
-        log_file = f"{log_path}/download_log_{i}.txt"
+
         with open(log_file, 'a', encoding='utf-8') as log:
-            log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, Content saved to: {save_path.split('.')[:-1][0]}.html\n")
+            log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, Path: {save_path.split('.')[:-1][0]}.html\n")
 
     except Exception as e:
         print(f"保存文字内容失败: {url}，错误信息：{e}")
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"文字内容： {id}, {blogname}\n")
+        with open(log_file, 'a', encoding='utf-8') as log:
+            log.write(f"Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
 
 
 def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int) -> None:  #todo 完善视频逻辑
@@ -78,6 +83,8 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
         "User-Agent": "Reqable/2.33.12",
         "accept-encoding": "gzip"
     }
+    log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
+    log_file = f"{log_path}/download_log_{i}.txt"
     if 'http://' not in url and 'https://' not in url:
         raise ValueError("URL格式错误，请确保URL以http://或https://开头。")
     try:
@@ -91,8 +98,6 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
             f.write(response.content)
         print(f"成功下载视频: {url.split('?')[0]}")
 
-        log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
-        log_file = f"{log_path}/download_log_{i}.txt"
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}, Path: {save_path}\n")
 
@@ -100,6 +105,9 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
         print(f"下载视频失败: {url}，错误信息：{e}")
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
+        with open(log_file, 'a', encoding='utf-8') as log:
+            log.write(f"Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
+
 
 
 class Get:

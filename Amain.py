@@ -75,6 +75,9 @@ class GetPostDetails:
     
     def get_title(self) -> str:
         return self.content['response']['posts'][0]['post']['title'] if self.content else ""
+
+    def get_hot(self):
+        return
     
 
 def load_config(target:str) -> Any:
@@ -108,7 +111,7 @@ def main(optional_header: Dict[str, str]) -> None:
 
     # 交给extract_post_ids处理，分析帖子ID
     posts = extract_post_ids.extract_post_ids(response)
-    likes = extract_post_ids.get_likes(response)
+    likes, likes_low = extract_post_ids.get_likes(response)
     print(f"分析完成: {get_time()}")
 
     # 处理喜欢数不满足跳出
@@ -137,7 +140,7 @@ def main(optional_header: Dict[str, str]) -> None:
     # todo: 分流图片和文字
     for info in posts:  #posts结构：([a,b],c)
         if info[1] in [0,1]:
-            p = GetPostDetails(info)
+            p = GetPostDetails(info)  # 进入拉取单个帖子请求阶段
             url = p()
             c_type = p.get_type()  # 使用get_url函数获取每个帖子的URL
             gift = p.get_gift()  # 获取每个帖子的付费信息
@@ -180,6 +183,7 @@ def main(optional_header: Dict[str, str]) -> None:
         raise ValueError(f"内容列表({len(content_lists)})和类型列表长度({len(content_types_list)})不匹配，请检查数据源。")
 
     max_workers = 5  # 设置最大工作线程数，可根据需要调整
+    download_error = 0  # 统计下载错误的数量
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 创建下载任务
         future_to_url = {
@@ -199,8 +203,15 @@ def main(optional_header: Dict[str, str]) -> None:
                 future.result()  # 获取结果，如果有异常会抛出
                 print(f"进度: {completed_count}/{total_count} - 内容 {j+1} 下载完成")
             except Exception as exc:
+                download_error += 1
                 print(f"进度: {completed_count}/{total_count} - 内容 {j+1} 下载失败: {exc}")
 
+    with open(f'{path}/download_log_{n}.txt','a',encoding='utf-8') as log:
+        log.write(f"总共下载了{len(content_lists)}项内容。\n")
+        log.write(f"最高喜欢数: {likes}, 最低喜欢数: {likes_low}\n")
+        log.write(f"无效链接数量: {none_all}, 错误数量: {errors}\n")
+        log.write(f"下载错误数量: {download_error}\n")
+    print(f'{cl.get_colour("GREEN")}下载日志已保存到 {path}/download_log_{n}.txt{cl.reset()}')
 
     print(f"下载完成: {get_time()}")
     print(cl.get_colour('CYAN'))
@@ -211,6 +222,9 @@ if __name__ == "__main__":
 
     start_time=time.time()
     print(f"{get_time()}：程序开始。")
+    print(cl.get_colour('CYAN'))
+    print('\n' + f'=' * 80 + '\n')
+    print(cl.reset())
 
     optional_header={
         'tag': load_config('tag'), # 标签，自行填写

@@ -1,5 +1,5 @@
 import json
-from typing import Generator, Dict, Any, List, Optional
+from typing import Generator, Dict, Any, List, Optional, Tuple
 import time
 
 
@@ -53,10 +53,11 @@ def extract_post_ids(data: Dict[str, Any]) -> Generator[tuple[List[Any], int], N
     except Exception as e:
         print(f"读取文件时发生错误: {e}")
 
-def get_likes(data: Dict[str, Any]) -> Optional[int]:
+def get_likes(data: Dict[str, Any]) -> Optional[Tuple[int,int]]:
     try:
         likes = data['data']['list'][0]['postData']['postCount']['favoriteCount']
-        return likes
+        likes_low = data['data']['list'][-1]['postData']['postCount']['favoriteCount']
+        return likes, likes_low
     except json.JSONDecodeError:
         print(f"JSON文件格式错误")
         return None
