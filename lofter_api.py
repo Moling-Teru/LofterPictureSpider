@@ -1,7 +1,6 @@
 import requests
 import json
 from typing import Dict, Any, Optional
-import just_get_it
 
 def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, Any]]:
     """
@@ -49,7 +48,7 @@ def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, 
             headers=headers,
             data=body_data,
             timeout=30,
-            proxies=just_get_it.get_random_proxy('http://localhost:5555/random')  # 不需要代理可以删除
+            proxies=None  # 不需要代理可以删除
         )
         
         # 检查响应状态码
@@ -74,12 +73,14 @@ def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, 
         return None
 
 
-def request_lofter_with_custom_params(body_params: Dict[str, str] ,offset: int) -> Optional[Dict[str, Any]]:
+def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, proxy: Dict = None) -> Optional[Dict[str, Any]]:
     """
     使用自定义参数请求LOFTER API
     
     Args:
         body_params (Dict[str, str]): 自定义的请求体参数
+        offset (int): 偏移量
+        proxy (Dict, optional): 代理设置，默认为None
         
     Returns:
         Optional[Dict[str, Any]]: API响应的JSON数据，如果请求失败则返回None
@@ -117,7 +118,8 @@ def request_lofter_with_custom_params(body_params: Dict[str, str] ,offset: int) 
             url=url,
             headers=headers,
             data=body_data,
-            timeout=30
+            timeout=30,
+            proxies=proxy
         )
         
         response.raise_for_status()

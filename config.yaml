@@ -1,5 +1,5 @@
-tag: 丹恒
-type: week        #可以在date, week, month, total中选择
+tag: 战双帕弥什
+type: total  # 可以在date, week, month, total中选择
 
 turn: 
   - 0   # 起始位 从第n+1个帖子开始抓取

@@ -1,19 +1,19 @@
 import requests
 from requests.adapters import HTTPAdapter
-import just_get_it
 from typing import Dict, Any, Optional
 
 s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=3))
 s.mount('https://', HTTPAdapter(max_retries=3))
 
-def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
+def get_post_details(post_id, blog_domain: str, proxy: dict = None) -> Optional[Dict[str, Any]]:
     """
     根据帖子ID获取帖子详情的原始JSON数据
     
     Args:
         post_id: 帖子ID (整数)
         blog_domain: 博客域名 (字符串)
+        proxy: 代理设置 (字典)，如果不需要代理可以传入None
         
     Returns:
         Optional[Dict[str, Any]]: 帖子详情的原始JSON数据，如果请求失败则返回None
@@ -56,7 +56,7 @@ def get_post_details(post_id, blog_domain: str) -> Optional[Dict[str, Any]]:
             params=params,
             data=body_data,
             timeout=30,
-            proxies=just_get_it.get_random_proxy(proxy_url)  # 不需要代理可以删除
+            proxies=proxy  # 不需要代理可以删除
         )
         #print('Get!')
         # 检查响应状态码

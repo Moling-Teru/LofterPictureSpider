@@ -56,7 +56,7 @@ def get_platform_command(script_name, run_index):
     根据不同的操作系统生成用于在新终端中运行脚本的命令。
     """
     # 将运行序号作为命令行参数传递给 worker.py
-    python_command = f'python {script_name} --offset {run_index} --path {CHECK_FOLDER}'
+    python_command = f'python {script_name} --offset {run_index} --path {CHECK_FOLDER} --proxies 1'  # 代理开关
 
     if sys.platform == "win32":
         # Windows系统: 使用 'start /wait' 命令在新 cmd 窗口中运行

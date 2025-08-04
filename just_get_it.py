@@ -8,16 +8,7 @@ s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=3))
 s.mount('https://', HTTPAdapter(max_retries=3))
 
-proxypool_url = "http://localhost:5555/random"
-
-
-def get_random_proxy(url: str) -> dict:
-    proxy = requests.get(url).text.strip()
-    proxies = {'http': 'http://' + proxy}
-    return proxies
-
-
-def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int) -> None:
+def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict) -> None:
     log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
     log_file = f"{log_path}/download_log_{i}.txt"
     headers = {
@@ -33,7 +24,7 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
         address = url.split('/')[3]
         url = url.replace(f'http://nos.netease.com/{address}',f'https://{address}.lf127.net')
     try:
-        response = s.get(url, timeout=30, headers=headers, params=params, proxies=get_random_proxy(proxypool_url)) # 无需代理可以删除proxies
+        response = s.get(url, timeout=30, headers=headers, params=params, proxies=proxy) # 无需代理可以删除proxies
         response.raise_for_status()  # 检查请求是否成功
         with open(save_path, 'wb') as f:
             f.write(response.content)
@@ -78,7 +69,7 @@ def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gi
             log.write(f"Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
 
 
-def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int) -> None:  #todo 完善视频逻辑
+def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict) -> None:  #todo 完善视频逻辑
     headers = {
         "User-Agent": "Reqable/2.33.12",
         "accept-encoding": "gzip"
@@ -89,7 +80,7 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
         raise ValueError("URL格式错误，请确保URL以http://或https://开头。")
     try:
         response = s.get(url, timeout=30, headers=headers,
-                         proxies=get_random_proxy(proxypool_url))  # 无需代理可以删除proxies
+                         proxies=proxy)  # 无需代理可以删除proxies
         response.raise_for_status()  # 检查请求是否成功
         if response.status_code != 200:
             raise RuntimeError(f"下载失败，状态码: {response.status_code}")
@@ -121,12 +112,12 @@ class Get:
         self.i = i
 
 
-    def okget(self, content_type: int):
+    def okget(self, content_type: int, proxy: dict = None):
         if content_type == 1: #图片
-            get_pic(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i)
+            get_pic(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i, proxy)
         elif content_type == 0: #文字
             get_article(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i)
         elif content_type == 2:  # 视频
-            get_video(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i)
+            get_video(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i, proxy)
         else:
             raise ValueError("未知的内容类型")

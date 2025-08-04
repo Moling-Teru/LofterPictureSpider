@@ -6,6 +6,9 @@ import simple_get_post_details
 import resolve_url
 import get_article
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
+import json
+import random
 #from multiprocessing import Pool
 import color
 from typing import Dict, Any, Optional, List, Tuple
@@ -22,9 +25,47 @@ def get_time():
     time = datetime.datetime.now()
     return time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
+def get_proxies(num: int, require: bool) -> List[Dict | None]:
+    """
+    获取代理池中的代理列表
+    :return: 代理列表
+    """
+    if not require:
+        return [None]
+    headers={
+        'Connection': 'Close'
+    }
+    proxies = []  # 存储获取到的代理
+    try:
+        with open('proxy_api.txt','r', encoding='utf-8') as f:
+            proxy_api = f.read().strip()
+            if not proxy_api:
+                raise ValueError("代理API地址为空，请检查proxy_api.txt文件。")
+        response = requests.get(
+            f'https://api.douyadaili.com/proxy/?service=GetIp&authkey={proxy_api}&num={num}&lifetime=15&prot=1&format=json',
+            headers=headers, timeout=5
+        )
+        if response.status_code != 200:
+            raise RuntimeError('代理池请求失败，状态码: {}'.format(response.status_code))
+        else:
+            data = response.json()
+            for one in data['data']:
+                proxy_ip = one['ip']
+                proxy_port = one['port']
+                proxy = {
+                    'http': f'http://{proxy_ip}:{proxy_port}',
+                    'https': f'http://{proxy_ip}:{proxy_port}'
+                }
+                proxies.append(proxy)
+            return proxies
+    except TimeoutError:
+        raise TimeoutError('代理池请求超时，请检查网络连接或代理池服务是否正常。')
+    except json.JSONDecodeError:
+        raise RuntimeError('代理池返回格式有误。')
+
 
 class GetPostDetails:
-    def __init__(self, info: tuple[list,int]) -> None:
+    def __init__(self, info: tuple[list,int], proxy) -> None:
         self.id = info[0][0]    # 帖子ID
         self.domain = info[0][1]  # 作者域名
         self.content_type = info[1]
@@ -32,7 +73,7 @@ class GetPostDetails:
         Input:
         id: tuple 第一项list：[帖子ID, 作者域名]  第二项int: 0-文字，1-图片
         """
-        self.content = simple_get_post_details.get_post_details(self.id, self.domain)
+        self.content = simple_get_post_details.get_post_details(self.id, self.domain, proxy)
         print(f"帖子ID & 作者域名: [{self.id}, {self.domain}]")
 
     def __call__(self) -> Optional[str]:
@@ -93,14 +134,17 @@ def main(optional_header: Dict[str, str]) -> None:
     parser = argparse.ArgumentParser(description='Lofter爬虫主程序')
     parser.add_argument('--offset', default=0, help='offset设置')
     parser.add_argument('--path', default='', help='保存路径设置')
+    parser.add_argument('--proxies', default='1')
 
     args = parser.parse_args()
     n = int(args.offset)
     path = args.path
+    proxies_or_not = bool(int(args.proxies))
 
     # 调用LOFTER API，抓取tag下内容
     print(f"{cl.get_colour('BLUE')}抓取帖子ID-第{n+1}次: {get_time()}{cl.reset()}")
-    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*n)
+    proxy = get_proxies(1, proxies_or_not)[0]   # 获取1个代理
+    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*n, proxy=proxy)
 
     if not response:
         raise RuntimeError("没有获取到数据，可能是网络问题或API错误")
@@ -140,7 +184,7 @@ def main(optional_header: Dict[str, str]) -> None:
     # todo: 分流图片和文字
     for info in posts:  #posts结构：([a,b],c)
         if info[1] in [0,1]:
-            p = GetPostDetails(info)  # 进入拉取单个帖子请求阶段
+            p = GetPostDetails(info, proxy)  # 进入拉取单个帖子请求阶段
             url = p()
             c_type = p.get_type()  # 使用get_url函数获取每个帖子的URL
             gift = p.get_gift()  # 获取每个帖子的付费信息
@@ -184,10 +228,11 @@ def main(optional_header: Dict[str, str]) -> None:
 
     max_workers = 5  # 设置最大工作线程数，可根据需要调整
     download_error = 0  # 统计下载错误的数量
+    proxy = get_proxies(5, proxies_or_not)  # 获取mini代理池
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 创建下载任务
         future_to_url = {
-            executor.submit(just_get_it.Get(content_list=content_list,path=f'{path}/{n}-{j+1}.png',i=n).okget,content_types_list[j]):  #todo: 整理一下文字和图片的判断逻辑 尤其是url展开之后
+            executor.submit(just_get_it.Get(content_list=content_list,path=f'{path}/{n}-{j+1}.png',i=n).okget,content_types_list[j], random.choice(proxy)):  #todo: 整理一下文字和图片的判断逻辑 尤其是url展开之后
             (j, content_list) for j, content_list in enumerate(content_lists)
         }
         
@@ -203,14 +248,14 @@ def main(optional_header: Dict[str, str]) -> None:
                 future.result()  # 获取结果，如果有异常会抛出
                 print(f"进度: {completed_count}/{total_count} - 内容 {j+1} 下载完成")
             except Exception as exc:
-                download_error += 1
+                #download_error += 1
                 print(f"进度: {completed_count}/{total_count} - 内容 {j+1} 下载失败: {exc}")
 
     with open(f'{path}/download_log_{n}.txt','a',encoding='utf-8') as log:
         log.write(f"总共下载了{len(content_lists)}项内容。\n")
         log.write(f"最高喜欢数: {likes}, 最低喜欢数: {likes_low}\n")
         log.write(f"无效链接数量: {none_all}, 错误数量: {errors}\n")
-        log.write(f"下载错误数量: {download_error}\n")
+        #log.write(f"下载错误数量: {download_error}\n")
     print(f'{cl.get_colour("GREEN")}下载日志已保存到 {path}/download_log_{n}.txt{cl.reset()}')
 
     print(f"下载完成: {get_time()}")

@@ -5,11 +5,11 @@
 ## 如何使用？
 > [!TIP]
 > 为防止爬取过快被封IP，本repo使用代理池。\
-> 代理池来源：[Python3WebSpider / ProxyPool](https://github.com/Python3WebSpider/ProxyPool)\
-> 默认在localhost:5555运行，如有其他代理池，\
-> 请在[simple_get_post_details.py](simple_get_post_details.py)，[lofter_api.py](lofter_api.py)，[just_get_it.py](just_get_it.py)中修改。\
-> 不使用代理池，请将以上文件中requests部分的proxies删除。\
-> 目前测试看来Lofter的防爬措施不严格，单IP不用代理也可以试着玩玩。
+> 8月4日对代理池进行了更改。原来的方式有bug，https全部没有走代理。
+> 推荐免费代理池来源（请检查https可用性）：[Python3WebSpider / ProxyPool](https://github.com/Python3WebSpider/ProxyPool)\
+> 如有其他代理池，请在[Amain.py](Amain.py)中修改。\
+> 不使用代理池，请将[launcher.py Line-59](https://github.com/Moling-Teru/LofterPictureSpider/blob/main/launcher.py#L59)的proxies参数改为0。\
+> 目前测试看来Lofter的防爬措施不严格，单IP不用代理也可以正常使用。
 
 使用前请先安装依赖。
 **程序入口为[launcher.py](launcher.py)，程序设置位于[config.yaml](config.yaml)。**
