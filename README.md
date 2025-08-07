@@ -4,15 +4,18 @@
 
 
 ## New!
-新增使用lofter-phone-login-auth进行“我的喜欢”采集。\
-目前已经支持收集已付费的彩蛋内容（未付费的不可采集）。
+新增使用lofter-phone-login-auth进行“我的喜欢”采集。代码位于Likes文件夹下，启动方式依然是launcher.py。\
+目前已经支持收集已付费的彩蛋内容（未付费的不可采集）。\
+**如果你的收藏为公开状态（一般默认是公开），那么可以不填写lofter-phone-login-auth，只填写博客链接。**\
+博客链接格式为 xxx.lofter.com，不要写https的协议。\
+xxx 为你的Lofter ID，手机端可见，在“我的”界面昵称下方。
 >[!TIP]
 > 获取lofter-phone-login-auth，推荐：
 > - 苹果手机，安装Reqable进行抓包（安卓不推荐，无法安装系统CA证书）。
 > - 电脑网页端使用手机号登录，F12开发者模式，详见[教程：img-2.png](img-2.png)
 > 
 > <img src="img-2.png" alt="Guidance" width = 60%>\
-> - 安卓手机可以尝试使用Kiwi Browser中的开发者模式。
+> - 安卓手机可以尝试使用Kiwi Browser中的开发者模式。（不过运行这个程序肯定要电脑，不如咱就用方法2吧）
 
 Likes/launcher.py现在也有新增的参数，--refresh 1 表示更新喜欢列表（准确的说是喜欢的帖子数量） --proxies 1 表示启用代理。
 >[!IMPORTANT]
