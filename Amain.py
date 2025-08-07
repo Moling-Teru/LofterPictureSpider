@@ -18,8 +18,7 @@ import just_get_it
 
 cl = color.Color()
 
-# 需要使用代理，此代码使用Python3WebSpider / ProxyPool (Github)
-# get_pic.py和simple_get_post_details.py中会使用代理池
+# 代理可选。调整请至launcher.py.
 
 def get_time():
     time = datetime.datetime.now()
@@ -116,9 +115,6 @@ class GetPostDetails:
     
     def get_title(self) -> str:
         return self.content['response']['posts'][0]['post']['title'] if self.content else ""
-
-    def get_hot(self):
-        return
     
 
 def load_config(target:str) -> Any:
@@ -147,7 +143,7 @@ def main(optional_header: Dict[str, str]) -> None:
     response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*n, proxy=proxy)
 
     if not response:
-        raise RuntimeError("没有获取到数据，可能是网络问题或API错误")
+        raise RuntimeError("没有获取到数据，可能是网络问题或API超出范围。")
     
     print(f"抓取tag完成: {get_time()}")
 
@@ -254,7 +250,7 @@ def main(optional_header: Dict[str, str]) -> None:
     with open(f'{path}/download_log_{n}.txt','a',encoding='utf-8') as log:
         log.write(f"总共下载了{len(content_lists)}项内容。\n")
         log.write(f"最高喜欢数: {likes}, 最低喜欢数: {likes_low}\n")
-        log.write(f"无效链接数量: {none_all}, 错误数量: {errors}\n")
+        log.write(f"无效链接数量: {none_all}, 错误链接数量: {errors}\n")
         #log.write(f"下载错误数量: {download_error}\n")
     print(f'{cl.get_colour("GREEN")}下载日志已保存到 {path}/download_log_{n}.txt{cl.reset()}')
 

@@ -2,52 +2,97 @@ import subprocess
 import threading
 import sys
 import time
-from typing import Any
+from typing import Any, Optional
 import datetime
 import color
 import os
 import shutil
+import main_likes
+import yaml
+import argparse
+
+parser = argparse.ArgumentParser(description='Lofter爬虫启动器')
+parser.add_argument('--refresh', default=0)
+parser.add_argument('--proxies',default=0)
+
+args = parser.parse_args()
+refresh = bool(int(args.refresh))  # 是否刷新喜欢总数
+proxies_or_not = bool(int(args.proxies))  # 是否使用代理
 
 def load_config(target:str) -> Any:
-    import yaml
-
     with open('config.yaml', 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
-        result = config[target]
-
+        try:
+            result = config[target]
+        except KeyError:
+            return None
     return result
 
 
-def check_folder(tag: str) -> str:
-    import os
+def path_check(path: str) -> Optional[str]:
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        new_path = f'{path}/{main_likes.get_time().replace(":","-").replace(" ","_").split(".")[0]}'
+        os.makedirs(new_path)
 
-    if not os.path.exists('contents'):
-        os.makedirs('contents')
-
-    if not os.path.exists(f'contents/tag-{tag}'):
-        os.makedirs(f'contents/tag-{tag}')
-
-    path=f'contents/tag-{tag}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    shutil.copy('config.yaml', f'{path}/config.yaml')
-
-    return path
+        return new_path
+    except TypeError:
+        raise RuntimeError('路径设置错误，请检查config.yaml.')
 
 cl=color.Color()
+
+cert = load_config('cert')
+start_position = load_config('start')
+end_position = load_config('end')
+blogname = load_config('blogname')
+
+def get_range(start, end):
+    if not load_config('amount'):  # 初始化：喜欢总数
+        favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
+        yaml_data = {"amount": favorites_amount,
+                     'time': time.time()}
+        with open('config.yaml', 'a', encoding='utf-8') as f:
+            f.write('\n')
+            yaml.dump(data=yaml_data, stream=f, allow_unicode=True)
+    else:
+        current_time = time.time()
+        if  current_time - load_config('time') >= 43200 or refresh:
+            favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
+            with open('config.yaml', 'r', encoding='utf-8') as f:
+                _data = yaml.load(f, Loader=yaml.FullLoader)
+                _data['amount'] = favorites_amount
+                _data['time'] = time.time()
+            with open('config.yaml', 'w', encoding='utf-8') as f:
+                yaml.dump(data=_data, stream=f, allow_unicode=True)
+        else:
+            favorites_amount = load_config('amount')
+    if end is None:
+        end = favorites_amount // 18
+
+    elif favorites_amount // 18 < end:
+        end = favorites_amount // 18
+        print(f"{cl.get_colour("YELLOW")}结束位置超过喜欢列表长度，已自动调整为最大值。{cl.reset()}")
+
+    if start is None:
+        start = 0
+        print(f"{cl.get_colour("YELLOW")}起始位置未填，已自动调整为0。{cl.reset()}")
+
+    return [start, end]
+
+
 # --- 配置区 ---
 # 1. 要运行的工作脚本文件名
-WORKER_SCRIPT = "Amain.py"
+WORKER_SCRIPT = "main_likes.py"
 
 # 2. 限制同时运行的最大进程数
 MAX_CONCURRENT_PROCESSES = 3
 
 # 3. 你想要运行的总次数
-TOTAL_RUNS : list = load_config('turn')
+TOTAL_RUNS : list = get_range(start_position, end_position)
 
 # 4. 设置路径
-CHECK_FOLDER = check_folder(load_config('tag'))
+CHECK_FOLDER = path_check(load_config('path'))
 
 # --- 配置区结束 ---
 
@@ -56,7 +101,7 @@ def get_platform_command(script_name, run_index):
     根据不同的操作系统生成用于在新终端中运行脚本的命令。
     """
     # 将运行序号作为命令行参数传递给 worker.py
-    python_command = f'python {script_name} --offset {run_index} --path {CHECK_FOLDER} --proxies 0'  # 代理开关
+    python_command = f'python {script_name} -n {run_index} --path {CHECK_FOLDER} --proxies {1 if proxies_or_not else 0}'  # 代理开关
 
     if sys.platform == "win32":
         # Windows系统: 使用 'start /wait' 命令在新 cmd 窗口中运行
@@ -75,13 +120,10 @@ def get_platform_command(script_name, run_index):
 
     elif sys.platform.startswith("linux"):
         # Linux系统: 常见的终端是 gnome-terminal, konsole, xterm等
-        # 注意：你可能需要根据你使用的终端修改此命令
         # gnome-terminal:
         return ["gnome-terminal", "--", "bash", "-c", f"{python_command}; exec bash"]
         # 如果想让窗口执行完后自动关闭，使用下面的命令
         # return ["gnome-terminal", "--", "bash", "-c", f"{python_command}; exit"]
-        # xterm:
-        # return ["xterm", "-e", f"bash -c '{python_command}; read -p \"Press Enter to close...\"'"]
 
     else:
         raise NotImplementedError(f"不支持的操作系统: {sys.platform}")
@@ -92,7 +134,7 @@ def run_worker_in_new_terminal(semaphore, run_index, run_times: int):
     一个线程的目标函数，用于获取信号量、启动子进程并等待其完成。
     """
     with semaphore:  # with语句会自动处理acquire和release
-        print(f"[启动器] 正在分配资源给第 {run_times} 次运行（范围{run_index * 10 + 1}-{run_index * 10 + 10}）...")
+        print(f"[启动器] 正在分配资源给第 {run_times} 次运行（范围{run_index * 18 + 1}-{run_index * 18 + 18}）...")
 
         try:
             platform_config = get_platform_command(WORKER_SCRIPT, run_index)

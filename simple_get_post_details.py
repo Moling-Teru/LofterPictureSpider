@@ -27,7 +27,8 @@ def get_post_details(post_id, blog_domain: str, proxy: dict = None) -> Optional[
         "lofproduct": "lofter-android-8.2.23", 
         "user-agent": "LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI",
         "accept-encoding": "gzip",
-        "content-type": "application/x-www-form-urlencoded"
+        "content-type": "application/x-www-form-urlencoded",
+        "lofter-phone-login-auth": "wa6AZpw1DLn0Ua5ufjY7IkJChCgHDILU1BF1EIFsC568Ihf3SlEIkI3j870zccKt9dET0xLCTUUnmuJToM7WCoI9gUKkSl2u"
     }
     
     # URL参数
@@ -86,13 +87,13 @@ def get_post_details(post_id, blog_domain: str, proxy: dict = None) -> Optional[
 # 测试区域
 if __name__ == "__main__":
     # 测试获取帖子详情
-    post_id = 11791583334  # 替换为实际的帖子ID
-    blog_domain = "changge45zj"  # 替换为实际的博客域名
+    post_id = 11757071736  # 替换为实际的帖子ID
+    blog_domain = "wo-cp99"  # 替换为实际的博客域名
     
     post_details = get_post_details(post_id, blog_domain)
     
     if post_details:
-        with open('post_details_paid.json', 'w', encoding='utf-8') as f:
+        with open('Likes/post_details_picture_paid_test.json', 'w', encoding='utf-8') as f:
             import json
             json.dump(post_details, f, ensure_ascii=False, indent=4)
     else:

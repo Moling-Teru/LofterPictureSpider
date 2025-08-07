@@ -3,12 +3,13 @@ from requests.adapters import HTTPAdapter
 import dominate
 from dominate.tags import div, p, a, h2, meta  # 只导入你实际用到的标签
 from dominate.util import raw
+from typing import Optional
 
 s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=3))
 s.mount('https://', HTTPAdapter(max_retries=3))
 
-def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict) -> None:
+def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict | None) -> None:
     log_path = '/'.join(save_path.split('/')[:-1])  # 获取保存路径的目录
     log_file = f"{log_path}/download_log_{i}.txt"
     headers = {
@@ -38,7 +39,7 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
-            log.write(f"Error Downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
+            log.write(f"---> X  Error Downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
 
 
 def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gift: str, i: int) -> None:# 文字
@@ -66,10 +67,10 @@ def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gi
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"文字内容： {id}, {blogname}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
-            log.write(f"Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
+            log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
 
 
-def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict) -> None:  #todo 完善视频逻辑
+def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift: int, i: int, proxy: dict | None) -> None:  #todo 完善视频逻辑
     headers = {
         "User-Agent": "Reqable/2.33.12",
         "accept-encoding": "gzip"
@@ -97,7 +98,7 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
         with open('errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
-            log.write(f"Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
+            log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
 
 
 
@@ -112,7 +113,7 @@ class Get:
         self.i = i
 
 
-    def okget(self, content_type: int, proxy: dict = None):
+    def okget(self, content_type: int, proxy: Optional[dict] = None):
         if content_type == 1: #图片
             get_pic(self.url, self.path, self.id, self.blogname, self.title, self.gift, self.i, proxy)
         elif content_type == 0: #文字

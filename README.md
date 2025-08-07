@@ -5,7 +5,7 @@
 ## 如何使用？
 > [!TIP]
 > 为防止爬取过快被封IP，本repo使用代理池。\
-> 8月4日对代理池进行了更改。原来的方式有bug，https全部没有走代理。\
+> 8月4日对代理池方式进行了更改。原来的方式有bug，https全部没有走代理。（建议自行找一个代理池）\
 > 推荐免费代理池来源（请检查https可用性）：[Python3WebSpider / ProxyPool](https://github.com/Python3WebSpider/ProxyPool)\
 > 如有其他代理池，请在[Amain.py](Amain.py)中修改。\
 > 不使用代理池，请将[launcher.py Line-59](https://github.com/Moling-Teru/LofterPictureSpider/blob/main/launcher.py#L59)的proxies参数改为0。\
