@@ -2,6 +2,22 @@
 利用手机端API简单实现了爬取Lofter图片（目前新增文本，视频）。
 <div align="right"><img src="img.png" width = 128 height = 128 alt="Lofter Icon"></div>
 
+
+## New!
+新增使用lofter-phone-login-auth进行“我的喜欢”采集。\
+目前已经支持收集已付费的彩蛋内容（未付费的不可采集）。
+>[!TIP]
+> 获取lofter-phone-login-auth，推荐：
+> - 苹果手机，安装Reqable进行抓包（安卓不推荐，无法安装系统CA证书）。
+> - 电脑网页端使用手机号登录，F12开发者模式，详见[教程：img-2.png](img-2.png)
+> 
+> <img src="img-2.png" alt="Guidance" width = 60%>\
+> - 安卓手机可以尝试使用Kiwi Browser中的开发者模式。
+
+Likes/launcher.py现在也有新增的参数，--refresh 1 表示更新喜欢列表（准确的说是喜欢的帖子数量） --proxies 1 表示启用代理。
+>[!IMPORTANT]
+> 使用代理之前，请先确保get_proxies已经被正确设置或者修改为你的代理标准。
+
 ## 如何使用？
 > [!TIP]
 > 为防止爬取过快被封IP，本repo使用代理池。\
