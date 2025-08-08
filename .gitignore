@@ -2,8 +2,9 @@ images
 __pycache__
 *.json
 *.txt
-test.py
+Tags/test.py
 *.html
 contents
 !requirements.txt
 Likes/test
+Tag/test

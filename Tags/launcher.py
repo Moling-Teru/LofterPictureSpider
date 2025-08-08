@@ -35,7 +35,7 @@ def check_folder(tag: str) -> str:
 
     return path
 
-cl=color.Color()
+cl = color.Color()
 # --- 配置区 ---
 # 1. 要运行的工作脚本文件名
 WORKER_SCRIPT = "Amain.py"

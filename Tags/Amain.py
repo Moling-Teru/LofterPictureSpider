@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-import lofter_api
-import extract_post_ids
+from Tags import extract_post_ids, just_get_it, get_article, lofter_api
 import datetime, time
 import simple_get_post_details
 import resolve_url
-import get_article
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import json
@@ -14,7 +12,6 @@ import color
 from typing import Dict, Any, Optional, List, Tuple
 import argparse
 import sys
-import just_get_it
 
 cl = color.Color()
 
@@ -36,7 +33,7 @@ def get_proxies(num: int, require: bool) -> List[Dict | None]:
     }
     proxies = []  # 存储获取到的代理
     try:
-        with open('proxy_api.txt','r', encoding='utf-8') as f:
+        with open('proxy_api.txt', 'r', encoding='utf-8') as f:
             proxy_api = f.read().strip()
             if not proxy_api:
                 raise ValueError("代理API地址为空，请检查proxy_api.txt文件。")
@@ -140,7 +137,7 @@ def main(optional_header: Dict[str, str]) -> None:
     # 调用LOFTER API，抓取tag下内容
     print(f"{cl.get_colour('BLUE')}抓取帖子ID-第{n+1}次: {get_time()}{cl.reset()}")
     proxy = get_proxies(1, proxies_or_not)[0]   # 获取1个代理
-    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*n, proxy=proxy)
+    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10 * n, proxy=proxy)
 
     if not response:
         raise RuntimeError("没有获取到数据，可能是网络问题或API超出范围。")
@@ -228,7 +225,7 @@ def main(optional_header: Dict[str, str]) -> None:
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 创建下载任务
         future_to_url = {
-            executor.submit(just_get_it.Get(content_list=content_list,path=f'{path}/{n}-{j+1}.png',i=n).okget,content_types_list[j], random.choice(proxy)):  #todo: 整理一下文字和图片的判断逻辑 尤其是url展开之后
+            executor.submit(just_get_it.Get(content_list=content_list, path=f'{path}/{n}-{j + 1}.png', i=n).okget, content_types_list[j], random.choice(proxy)):  #todo: 整理一下文字和图片的判断逻辑 尤其是url展开之后
             (j, content_list) for j, content_list in enumerate(content_lists)
         }
         

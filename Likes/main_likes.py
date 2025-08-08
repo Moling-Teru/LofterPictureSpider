@@ -107,10 +107,13 @@ def get_favorites_detail(response: str) -> Generator[tuple[list[int | str], int]
     try:
         content = json.loads(response)
         for part in content['response']['items']:
-            if json.loads(part.get('misc', None)).get('postHide', None) in [str(1),1]:
-                continue
             if not part:
-                continue
+                return None
+            try:
+                if json.loads(part.get('misc', None)).get('postHide', None) in [str(1),1]:
+                    continue
+            except AttributeError:
+                return None
             post_id : int = int(part['post']['id'])
             blogname : str = part['post']['blogInfo']['blogName']
             # Lofter API中，type 4 为视频，type 2 为图片，type 1 为文章
@@ -480,6 +483,10 @@ def main():  # 请求单个offset，launcher里面塞多offset多线程
     content_lists = []
     content_types_list = []
     for post in content_generator:
+        if post is None:
+            none_all += 1
+            print(f"{cl.get_colour('RED')}帖子内容为空，跳过该帖子。{cl.reset()}")
+            continue
         try:
             p = GetPostDetails(post, proxy=get_proxies(1, require=if_proxies)[0], cert=cert)
         except IOError:
@@ -501,7 +508,7 @@ def main():  # 请求单个offset，launcher里面塞多offset多线程
         errors += error_count  # 统计无效链接的数量
         for i in range(len(results[0])):
             content_types_list.append(results[2])
-        time.sleep(random.random()/2.0)  #随机间隔，防止被ban
+        time.sleep(random.random()/0.8)  #随机间隔，防止ip被ban
 
     if none_all:
         print(f"获取帖子URL完成: {get_time()}, 共{url_all}项。{cl.get_colour('RED')}有{none_all}项无效链接。{cl.reset()}")

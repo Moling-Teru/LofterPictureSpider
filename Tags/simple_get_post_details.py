@@ -93,7 +93,7 @@ if __name__ == "__main__":
     post_details = get_post_details(post_id, blog_domain)
     
     if post_details:
-        with open('Likes/post_details_picture_paid_test.json', 'w', encoding='utf-8') as f:
+        with open('../Likes/post_details_picture_paid_test.json', 'w', encoding='utf-8') as f:
             import json
             json.dump(post_details, f, ensure_ascii=False, indent=4)
     else:
