@@ -4,6 +4,9 @@
 
 
 ## New!
+**新增合集采集功能。详见[Collection](Collection/README.md)文件夹。**
+<br>
+
 新增使用lofter-phone-login-auth进行“我的喜欢”采集。代码位于Likes文件夹下，启动方式依然是launcher.py。\
 目前已经支持收集已付费的彩蛋内容（未付费的不可采集）。\
 **如果想要收集彩蛋内容，则<u>必须</u>填写lofter-phone-login-auth。**\
