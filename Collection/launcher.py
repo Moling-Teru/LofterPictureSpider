@@ -7,7 +7,7 @@ import datetime
 import color
 import os
 import shutil
-import main_likes
+import main_collection
 import yaml
 from pathlib import Path
 import argparse
@@ -35,7 +35,7 @@ def path_check(path: str) -> Optional[str]:
     try:
         if not os.path.exists(path):
             os.makedirs(path)
-        new_path = f'{path}/{main_likes.get_time().replace(":","-").replace(" ","_").split(".")[0]}'
+        new_path = f'{path}/{main_collection.get_time().replace(":","-").replace(" ","_").split(".")[0]}'
         os.makedirs(new_path)
 
         return new_path
@@ -48,11 +48,13 @@ cert = load_config('cert')
 start_position = load_config('start')
 end_position = load_config('end')
 blogname = load_config('blogname')
+collection_id = load_config('collection_id')
+
 
 def get_range(start, end):
     if not load_config('amount'):  # 初始化：喜欢总数
-        favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
-        yaml_data = {"amount": favorites_amount,
+        collection_amount = main_collection.get_collection_amount(main_collection.get_list(0, blogname=blogname, cert=cert, collection_id=collection_id))  # 若需要代理，在这里调整proxies
+        yaml_data = {"amount": collection_amount,
                      'time': time.time()}
         with open('config.yaml', 'a', encoding='utf-8') as f:
             f.write('\n')
@@ -60,20 +62,20 @@ def get_range(start, end):
     else:
         current_time = time.time()
         if  current_time - load_config('time') >= 43200 or refresh:
-            favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
+            collection_amount = main_collection.get_collection_amount(main_collection.get_list(0, blogname=blogname, cert=cert, collection_id=collection_id))  # 若需要代理，在这里调整proxies
             with open('config.yaml', 'r', encoding='utf-8') as f:
                 _data = yaml.load(f, Loader=yaml.FullLoader)
-                _data['amount'] = favorites_amount
+                _data['amount'] = collection_amount
                 _data['time'] = time.time()
             with open('config.yaml', 'w', encoding='utf-8') as f:
                 yaml.dump(data=_data, stream=f, allow_unicode=True)
         else:
-            favorites_amount = load_config('amount')
+            collection_amount = load_config('amount')
     if end is None:
-        end = favorites_amount // 18
+        end = collection_amount // 18
 
-    elif favorites_amount // 18 < end:
-        end = favorites_amount // 18
+    elif collection_amount // 18 < end:
+        end = collection_amount // 18
         print(f"{cl.get_colour("YELLOW")}结束位置超过喜欢列表长度，已自动调整为最大值。{cl.reset()}")
 
     if start is None:

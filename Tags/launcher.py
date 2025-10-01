@@ -2,16 +2,17 @@ import subprocess
 import threading
 import sys
 import time
-from typing import Any
+from typing import Any, Optional
 import datetime
 import color
 import os
 import shutil
+from pathlib import Path
 
 def load_config(target:str) -> Any:
     import yaml
-
-    with open('config.yaml', 'r', encoding='utf-8') as f:
+    cfg_path = Path(__file__).with_name('config.yaml')
+    with open(cfg_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
         result = config[target]
 
@@ -30,8 +31,9 @@ def check_folder(tag: str) -> str:
     path=f'contents/tag-{tag}/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
     if not os.path.exists(path):
         os.makedirs(path)
-
-    shutil.copy('config.yaml', f'{path}/config.yaml')
+    
+    cfg_path = Path(__file__).with_name('config.yaml')
+    shutil.copy(cfg_path, f'{path}/config.yaml')
 
     return path
 
@@ -44,7 +46,11 @@ WORKER_SCRIPT = "Amain.py"
 MAX_CONCURRENT_PROCESSES = 3
 
 # 3. 你想要运行的总次数
-TOTAL_RUNS : list = load_config('turn')
+TOTAL_RUNS : Optional[list] = load_config('turn')
+SPECIFIED_RUNS : Optional[list] = load_config('specified')
+if SPECIFIED_RUNS:
+    TOTAL_RUNS = None
+
 
 # 4. 设置路径
 CHECK_FOLDER = check_folder(load_config('tag'))
@@ -127,17 +133,31 @@ def main_launcher():
     
     threads = []
     run_times = 0
-    print(f"准备开始 {TOTAL_RUNS} 次运行，最大并发数: {MAX_CONCURRENT_PROCESSES}")
-    
-    for i in range(TOTAL_RUNS[0], TOTAL_RUNS[1]):
-        # 为每一次运行创建一个管理线程
-        # 这个线程的工作就是启动worker进程并等待它结束
-        run_times += 1
-        thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
-        threads.append(thread)
-        thread.start()
-        time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+    print(f"准备开始 {TOTAL_RUNS[1] - TOTAL_RUNS[0] if TOTAL_RUNS else len(SPECIFIED_RUNS)} 次运行，最大并发数: {MAX_CONCURRENT_PROCESSES}")
 
+    if TOTAL_RUNS:
+        for i in range(TOTAL_RUNS[0], TOTAL_RUNS[1]):
+            # 为每一次运行创建一个管理线程
+            # 这个线程的工作就是启动worker进程并等待它结束
+            run_times += 1
+            thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
+            threads.append(thread)
+            thread.start()
+            time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+
+    elif SPECIFIED_RUNS:
+        for i in SPECIFIED_RUNS:
+            if isinstance(i, int):
+                run_times += 1
+                thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
+                threads.append(thread)
+                thread.start()
+                time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+            else:
+                raise ValueError('SPECIFIED_RUNS 填写格式有错误')
+
+    else:
+        raise ValueError('TOTAL_RUNS 和 SPECIFIED_RUNS 均未填写')
     # 等待所有管理线程执行完毕
     for thread in threads:
         thread.join()

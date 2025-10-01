@@ -15,7 +15,7 @@ import random
 from pathlib import Path
 
 
-likes_url = 'https://api.lofter.com/v1.1/batchdata.api'
+collection_url = 'https://api.lofter.com/v1.1/postCollection.api'
 
 cl = color.Color()
 
@@ -57,7 +57,7 @@ def get_proxies(num: int, require: bool) -> List[Dict | None]:
     except json.JSONDecodeError:
         raise RuntimeError('代理池返回格式有误。')
 
-def get_list(offset: int, blogname: str, cert: str, proxies: dict = None) -> Optional[str]:
+def get_list(offset: int, blogname: str, cert: str, collection_id: int, proxies: dict = None) -> Optional[str]:
     headers = {
         'User-Agent': 'LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI',
         'Connection': 'keep-alive',
@@ -74,29 +74,28 @@ def get_list(offset: int, blogname: str, cert: str, proxies: dict = None) -> Opt
     body = {
         "supportposttypes": "1,2,3,4,5,6",
         "blogdomain": blogname,
-        "offset": str(offset*18),
-        "method": "favorites",
-        "postdigestnew": "1",
-        "returnData": "1",
-        "limit": "18"
+        "offset": str(offset*15),
+        "method": "getCollectionDetail",
+        "collectionid": str(collection_id),
+        "order": "1",
+        "limit": "15"
     }
 
-    response = s.post(likes_url, headers=headers, params=params,
+    response = s.post(collection_url, headers=headers, params=params,
                             data=body, timeout=10, proxies=proxies)
 
     if response.status_code == 200:
         return response.text
     else:
-        raise requests.exceptions.ConnectionError(f'获取喜欢列表时服务器返回异常，状态码：{response.status_code}')
+        raise requests.exceptions.ConnectionError(f'获取合集列表时服务器返回异常，状态码：{response.status_code}')
 
 
-def get_favorites_amount(response: str) -> Optional[int]:
+def get_collection_amount(response: str) -> Optional[int]:
     try:
         data = json.loads(response)
         if data['meta']['status'] != 200:
-            raise RuntimeError(f'服务器返回喜欢列表内容异常，状态码：{data['meta']['status']}')
-        #print(data['response']['archives']) 按月份统计，暂无计划
-        return int(data['response'].get('count',0))
+            raise RuntimeError(f'服务器返回合集列表内容异常，状态码：{data['meta']['status']}')
+        return int(data['response'].get('collection',0).get('postCount',0))
     except json.JSONDecodeError:
         print("响应内容不是有效的JSON格式。")
         return None
@@ -104,7 +103,7 @@ def get_favorites_amount(response: str) -> Optional[int]:
         print(f'未知异常：{str(e)}')
         return None
 
-def get_favorites_detail(response: str) -> Generator[tuple[list[int | str], int], Any, None]:
+def get_collection_detail(response: str) -> Generator[tuple[list[int | str], int], Any, None]:
     try:
         content = json.loads(response)
         for part in content['response']['items']:
@@ -458,7 +457,7 @@ def get_time() -> str:
 
 
 def main():  # 请求单个offset，launcher里面塞多offset多线程
-    parser = argparse.ArgumentParser(description='Lofter爬虫--抓取我的喜欢')
+    parser = argparse.ArgumentParser(description='Lofter爬虫--抓取我的合集')
     parser.add_argument('--proxies', default=0)
     parser.add_argument('-n',default=0)
     parser.add_argument('--path', default='')
@@ -472,11 +471,12 @@ def main():  # 请求单个offset，launcher里面塞多offset多线程
 
     cert = load_config('cert')
     blogname = load_config('blogname')
+    collection_id = load_config('collection_id')
 
     # 开始抓list
-    print(f'{cl.get_colour("BLUE")}{get_time()}：初始化完成，开始抓取喜欢列表...{cl.reset()}')
-    contents = get_list(int(n), blogname=blogname, cert=cert, proxies = get_proxies(1, require=if_proxies)[0])
-    content_generator = get_favorites_detail(contents)
+    print(f'{cl.get_colour("BLUE")}{get_time()}：初始化完成，开始抓取合集列表...{cl.reset()}')
+    contents = get_list(int(n), blogname=blogname, cert=cert, collection_id=collection_id, proxies = get_proxies(1, require=if_proxies)[0])
+    content_generator = get_collection_detail(contents)
 
     # generator到手，开始请求每一个帖子 照搬原来的代码
     none_all = 0  # 统计无效链接的数量

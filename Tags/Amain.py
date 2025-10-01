@@ -116,8 +116,9 @@ class GetPostDetails:
 
 def load_config(target:str) -> Any:
     import yaml
-
-    with open('config.yaml', 'r', encoding='utf-8') as f:
+    from pathlib import Path
+    cfg_path = Path(__file__).with_name('config.yaml')
+    with open(cfg_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
         result = config[target]
 
@@ -200,6 +201,7 @@ def main(optional_header: Dict[str, str]) -> None:
             url_all += 1
             content_lists.append(info[0])
             content_types_list.append(2)
+        time.sleep(random.uniform(0.3, 1.3))
 
 
     if none_all:
