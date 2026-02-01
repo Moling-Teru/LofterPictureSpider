@@ -36,7 +36,7 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
 
     except Exception as e:
         print(f"下载图片失败: {url}，错误信息：{e}")
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('tags/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error Downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
@@ -64,7 +64,7 @@ def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gi
 
     except Exception as e:
         print(f"保存文字内容失败: {url}，错误信息：{e}")
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('tags/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"文字内容： {id}, {blogname}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
@@ -95,7 +95,7 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
 
     except Exception as e:
         print(f"下载视频失败: {url}，错误信息：{e}")
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('tags/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")

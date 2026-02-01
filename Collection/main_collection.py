@@ -61,7 +61,7 @@ def get_list(offset: int, blogname: str, cert: str, collection_id: int, proxies:
     headers = {
         'User-Agent': 'LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI',
         'Connection': 'keep-alive',
-        'Accept-Encoding': 'br,gzip',
+        'Accept-Encoding': 'gzip',
         'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
         'lofproduct': 'lofter-android-8.2.23',
         'lofter-phone-login-auth': cert
@@ -128,9 +128,9 @@ def get_collection_detail(response: str) -> Generator[tuple[list[int | str], int
             else:
                 try:
                     print(f'{cl.get_colour('RED')}未知的Content-Type：{content_type}，跳过该帖子。')
-                    if not os.path.exists('log'):
-                        os.makedirs('log')
-                    with open('log/error_details.json', 'a', encoding='utf-8') as file:
+                    if not os.path.exists('collection/log'):
+                        os.makedirs('collection/log')
+                    with open('collection/log/error_details.json', 'a', encoding='utf-8') as file:
                         json.dump(content, file, ensure_ascii=False, indent=4)
                     print(f'本次请求的json文件已经保存。请附带该文件在github上提issue！{cl.reset()}')
                     continue
@@ -280,7 +280,7 @@ class GetPostDetails:
         self.content = get_post_details(cert, self.domain, self.id, proxy)
         if self.content is None:
             print('获取帖子内容失败。')
-            with open('errors.txt', 'a', encoding='utf-8') as file:
+            with open('collection/errors.txt', 'a', encoding='utf-8') as file:
                 file.write(f'获取帖子内容失败: {self.id}, {self.domain}\n')
                 raise IOError
         else:
@@ -355,7 +355,7 @@ def get_pic(url: str, save_path: str, id: int, blogname: str, title: str, gift: 
             log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}, Path: {save_path}\n")
 
     except Exception as e:
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('collection/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error Downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
@@ -382,7 +382,7 @@ def get_article(url: str, save_path: str, id: int, blogname: str, title: str, gi
             log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, Path: {save_path.split('.')[:-1][0]}.html\n")
 
     except Exception as e:
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('collection/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"文字内容： {id}, {blogname}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}")
@@ -412,7 +412,7 @@ def get_video(url: str, save_path: str, id: int, blogname: str, title: str, gift
             log.write(f"Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}, Path: {save_path}\n")
 
     except Exception as e:
-        with open('errors.txt', 'a', encoding='utf-8') as f:
+        with open('collection/errors.txt', 'a', encoding='utf-8') as f:
             f.write(f"{url}\n")
         with open(log_file, 'a', encoding='utf-8') as log:
             log.write(f"---> X  Error downloading: Title: {title}, ID: {id}, Blogname: {blogname}, Gift: {gift}, URL: {url}")
@@ -510,7 +510,7 @@ def main():  # 请求单个offset，launcher里面塞多offset多线程
         errors += error_count  # 统计无效链接的数量
         for i in range(len(results[0])):
             content_types_list.append(results[2])
-        time.sleep(random.random()/0.8)  #随机间隔，防止ip被ban
+        time.sleep(random.random()/1.25)  #随机间隔，防止ip被ban
 
     if none_all:
         print(f"获取帖子URL完成: {get_time()}, 共{url_all}项。{cl.get_colour('RED')}有{none_all}项无效链接。{cl.reset()}")

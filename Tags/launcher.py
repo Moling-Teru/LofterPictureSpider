@@ -19,7 +19,7 @@ def load_config(target:str) -> Any:
     return result
 
 
-def check_folder(tag: str) -> str:
+def _old_check_folder(tag: str) -> str:
     import os
 
     if not os.path.exists('contents'):
@@ -37,10 +37,27 @@ def check_folder(tag: str) -> str:
 
     return path
 
+def check_folder(path: str) -> Optional[str]:
+    def get_time() -> str:
+        import datetime
+        now = datetime.datetime.now()
+        return now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        new_path = f'{path}/{get_time().replace(":","-").replace(" ","_").split(".")[0]}'
+        os.makedirs(new_path)
+
+        return new_path
+    
+    except TypeError:
+        raise RuntimeError('路径设置错误，请检查config.yaml.')
+
 cl = color.Color()
 # --- 配置区 ---
 # 1. 要运行的工作脚本文件名
-WORKER_SCRIPT = "Amain.py"
+WORKER_SCRIPT = "Tags/Amain.py"
 
 # 2. 限制同时运行的最大进程数
 MAX_CONCURRENT_PROCESSES = 3
@@ -53,7 +70,7 @@ if SPECIFIED_RUNS:
 
 
 # 4. 设置路径
-CHECK_FOLDER = check_folder(load_config('tag'))
+CHECK_FOLDER = check_folder(f"Tags/Contents/tag-{load_config('tag')}")
 
 # --- 配置区结束 ---
 
@@ -104,6 +121,7 @@ def run_worker_in_new_terminal(semaphore, run_index, run_times: int):
             platform_config = get_platform_command(WORKER_SCRIPT, run_index)
 
             command = platform_config.get("command")
+            #flags = 0 调试用
             flags = platform_config.get("flags", 0)  # 默认为0，即无特殊标志
 
             # 在Windows上，creationflags=flags 会被使用
@@ -143,7 +161,7 @@ def main_launcher():
             thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
             threads.append(thread)
             thread.start()
-            time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+            time.sleep(0.5) # 短暂间隔，避免瞬间启动大量线程
 
     elif SPECIFIED_RUNS:
         for i in SPECIFIED_RUNS:
@@ -152,9 +170,10 @@ def main_launcher():
                 thread = threading.Thread(target=run_worker_in_new_terminal, args=(semaphore, i, run_times))
                 threads.append(thread)
                 thread.start()
-                time.sleep(1) # 短暂间隔，避免瞬间启动大量线程
+                time.sleep(0.5) # 短暂间隔，避免瞬间启动大量线程
             else:
-                raise ValueError('SPECIFIED_RUNS 填写格式有错误')
+                print(f'{cl.get_colour("RED")}SPECIFIED_RUNS 填写格式有错误{cl.reset()}')
+                continue
 
     else:
         raise ValueError('TOTAL_RUNS 和 SPECIFIED_RUNS 均未填写')
@@ -169,5 +188,6 @@ if __name__ == "__main__":
     start_time = time.time()
     main_launcher()
     end_time = time.time()
+    shutil.copy('tags/config.yaml', f'{CHECK_FOLDER}/config.yaml')
     print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒")
     print(f"图片保存路径: {CHECK_FOLDER}{cl.reset()}")

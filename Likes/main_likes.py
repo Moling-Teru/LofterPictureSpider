@@ -31,7 +31,7 @@ def get_proxies(num: int, require: bool) -> List[Dict | None]:
     }
     proxies = []  # 存储获取到的代理
     try:
-        with open('proxy_api.txt','r', encoding='utf-8') as f:
+        with open('likes/proxy_api.txt','r', encoding='utf-8') as f:
             proxy_api = f.read().strip()
             if not proxy_api:
                 raise ValueError("代理API地址为空，请检查proxy_api.txt文件。")
@@ -61,7 +61,7 @@ def get_list(offset: int, blogname: str, cert: str, proxies: dict = None) -> Opt
     headers = {
         'User-Agent': 'LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI',
         'Connection': 'keep-alive',
-        'Accept-Encoding': 'br,gzip',
+        'Accept-Encoding': 'gzip',
         'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
         'lofproduct': 'lofter-android-8.2.23',
         'lofter-phone-login-auth': cert
@@ -96,7 +96,7 @@ def get_favorites_amount(response: str) -> Optional[int]:
         if data['meta']['status'] != 200:
             raise RuntimeError(f'服务器返回喜欢列表内容异常，状态码：{data['meta']['status']}')
         #print(data['response']['archives']) 按月份统计，暂无计划
-        return int(data['response'].get('count',0))
+        return int(data['response']['count'])
     except json.JSONDecodeError:
         print("响应内容不是有效的JSON格式。")
         return None
@@ -129,11 +129,11 @@ def get_favorites_detail(response: str) -> Generator[tuple[list[int | str], int]
             else:
                 try:
                     print(f'{cl.get_colour('RED')}未知的Content-Type：{content_type}，跳过该帖子。')
-                    if not os.path.exists('log'):
-                        os.makedirs('log')
-                    with open('log/error_details.json', 'a', encoding='utf-8') as file:
+                    if not os.path.exists('likes/log'):
+                        os.makedirs('likes/log')
+                    with open('likes/log/error_details.json', 'a', encoding='utf-8') as file:
                         json.dump(content, file, ensure_ascii=False, indent=4)
-                    print(f'本次请求的json文件已经保存。请附带该文件在github上提issue！{cl.reset()}')
+                    print(f'本次请求的json文件已经保存。请附带该文件在Github上提issue！{cl.reset()}')
                     continue
                 except Exception as e:
                     print(f'{cl.get_colour('RED')}无法保存错误日志：{str(e)}{cl.reset()}')
@@ -510,7 +510,7 @@ def main():  # 请求单个offset，launcher里面塞多offset多线程
         errors += error_count  # 统计无效链接的数量
         for i in range(len(results[0])):
             content_types_list.append(results[2])
-        time.sleep(random.random()/0.8)  #随机间隔，防止ip被ban
+        time.sleep(random.random()/1.25)  #随机间隔，防止ip被ban
 
     if none_all:
         print(f"获取帖子URL完成: {get_time()}, 共{url_all}项。{cl.get_colour('RED')}有{none_all}项无效链接。{cl.reset()}")

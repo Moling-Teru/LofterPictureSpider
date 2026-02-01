@@ -54,18 +54,18 @@ def get_range(start, end):
         favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
         yaml_data = {"amount": favorites_amount,
                      'time': time.time()}
-        with open('config.yaml', 'a', encoding='utf-8') as f:
+        with open('likes/config.yaml', 'a', encoding='utf-8') as f:
             f.write('\n')
             yaml.dump(data=yaml_data, stream=f, allow_unicode=True)
     else:
         current_time = time.time()
-        if  current_time - load_config('time') >= 43200 or refresh:
-            favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))  # 若需要代理，在这里调整proxies
-            with open('config.yaml', 'r', encoding='utf-8') as f:
+        if current_time - load_config('time') >= 43200 or refresh:
+            favorites_amount = main_likes.get_favorites_amount(main_likes.get_list(0, blogname=blogname, cert=cert))
+            with open('likes/config.yaml', 'r', encoding='utf-8') as f:
                 _data = yaml.load(f, Loader=yaml.FullLoader)
                 _data['amount'] = favorites_amount
                 _data['time'] = time.time()
-            with open('config.yaml', 'w', encoding='utf-8') as f:
+            with open('likes/config.yaml', 'w', encoding='utf-8') as f:
                 yaml.dump(data=_data, stream=f, allow_unicode=True)
         else:
             favorites_amount = load_config('amount')
@@ -85,7 +85,7 @@ def get_range(start, end):
 
 # --- 配置区 ---
 # 1. 要运行的工作脚本文件名
-WORKER_SCRIPT = "main_collection.py"
+WORKER_SCRIPT = "Likes/main_likes.py"
 
 # 2. 限制同时运行的最大进程数
 MAX_CONCURRENT_PROCESSES = 3
@@ -94,7 +94,7 @@ MAX_CONCURRENT_PROCESSES = 3
 TOTAL_RUNS : list = get_range(start_position, end_position)
 
 # 4. 设置路径
-CHECK_FOLDER = path_check(load_config('path'))
+CHECK_FOLDER = path_check(f"likes/{load_config('path')}")
 
 # --- 配置区结束 ---
 
@@ -193,5 +193,6 @@ if __name__ == "__main__":
     start_time = time.time()
     main_launcher()
     end_time = time.time()
+    shutil.copy('likes/config.yaml', f"{CHECK_FOLDER}/config.yaml")
     print(f"{cl.get_colour('YELLOW')}总耗时: {end_time - start_time:.3f}秒")
     print(f"图片保存路径: {CHECK_FOLDER}{cl.reset()}")

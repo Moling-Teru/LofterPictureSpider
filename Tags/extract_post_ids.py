@@ -1,9 +1,9 @@
 import json
-from typing import Generator, Dict, Any, List, Optional, Tuple
+from typing import Iterator, Dict, Any, List, Optional, Tuple
 import time
 
 
-def extract_post_ids(data: Dict[str, Any]) -> Generator[tuple[List[Any], int], None]:
+def extract_post_ids(data: Dict[str, Any]) -> Iterator[tuple[List[Any], int] | None]:
     """
     从已解析的JSON数据中提取包含照片的帖子ID
     

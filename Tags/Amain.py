@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from Tags import extract_post_ids, just_get_it, get_article, lofter_api
+import extract_post_ids, just_get_it, get_article, lofter_api
 import datetime, time
 import simple_get_post_details
 import resolve_url
@@ -33,7 +33,7 @@ def get_proxies(num: int, require: bool) -> List[Dict | None]:
     }
     proxies = []  # 存储获取到的代理
     try:
-        with open('proxy_api.txt', 'r', encoding='utf-8') as f:
+        with open('tags/proxy_api.txt', 'r', encoding='utf-8') as f:
             proxy_api = f.read().strip()
             if not proxy_api:
                 raise ValueError("代理API地址为空，请检查proxy_api.txt文件。")
@@ -201,7 +201,7 @@ def main(optional_header: Dict[str, str]) -> None:
             url_all += 1
             content_lists.append(info[0])
             content_types_list.append(2)
-        time.sleep(random.uniform(0.3, 1.3))
+        time.sleep(random.uniform(0.1,0.3))
 
 
     if none_all:

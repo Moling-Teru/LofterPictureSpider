@@ -10,7 +10,7 @@ params = {
         "type": "png"
         }
 
-if os.path.exists('errors.txt'):
+if os.path.exists('tags/errors.txt'):
     pass
 else:
     raise FileNotFoundError("没有找到错误图片列表。")
@@ -19,7 +19,7 @@ time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 if not os.path.exists(f'contents/retry-{time}'):
     os.makedirs(f'contents/retry-{time}')
 
-with open('errors.txt', 'r') as f:
+with open('tags/errors.txt', 'r') as f:
     for i,line in enumerate(f):
         if 'nos.netease.com' in line:
             address = line.split('/')[3]
