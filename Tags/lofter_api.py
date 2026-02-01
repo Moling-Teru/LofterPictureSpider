@@ -89,7 +89,7 @@ def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, 
     
     # 默认的请求体参数
     default_body = {
-        "product": "lofter-android-8.2.23",
+        "product": "lofter-android-8.2.34",
         "postTypes": "",
         "offset": str(offset),
         "postYm": "",
@@ -107,8 +107,8 @@ def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, 
     # 构建请求头
     headers = {
         "x-device": "",
-        "lofproduct": "lofter-android-8.2.23",
-        "user-agent": "LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI",
+        "lofproduct": "lofter-android-8.2.34",
+        "user-agent": "LOFTER-Android 8.2.34 (RMX3888; Android 9; null) WIFI",
         "accept-encoding": "gzip",  # 只使用gzip，避免brotli
         "content-type": "application/x-www-form-urlencoded; charset=utf-8"
     }

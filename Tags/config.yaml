@@ -1,4 +1,4 @@
-tag: 饮月
+tag: 丹恒
 type: total  # 可以在date, week, month, total中选择
 
 turn: 
@@ -10,3 +10,5 @@ specified:  #如果运行时部分有报错，或者想抓特定范围的帖子�
             #注意，该参数优先级高，会对Turn执行override
 
 likes:          #抓取点赞数大于等于该数的帖子（可能存在少部分小于该数的帖子）  不需要就不填
+start-time: 2028-06-01     #抓取该时间之后发布的帖子（包含该时间） 格式：YYYY-MM-DD  不需要就不填
+end-time: 2028-06-15      #抓取该时间之前发布的帖子（包含该时间） 格式：YYYY-MM-DD  不需要就不填

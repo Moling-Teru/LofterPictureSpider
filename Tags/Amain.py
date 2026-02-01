@@ -12,6 +12,8 @@ import color
 from typing import Dict, Any, Optional, List, Tuple
 import argparse
 import sys
+import yaml
+from pathlib import Path
 
 cl = color.Color()
 
@@ -115,8 +117,7 @@ class GetPostDetails:
     
 
 def load_config(target:str) -> Any:
-    import yaml
-    from pathlib import Path
+
     cfg_path = Path(__file__).with_name('config.yaml')
     with open(cfg_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
@@ -128,7 +129,7 @@ def main(optional_header: Dict[str, str]) -> None:
     parser = argparse.ArgumentParser(description='Lofter爬虫主程序')
     parser.add_argument('--offset', default=0, help='offset设置')
     parser.add_argument('--path', default='', help='保存路径设置')
-    parser.add_argument('--proxies', default='1')
+    parser.add_argument('--proxies', default='0')
 
     args = parser.parse_args()
     n = int(args.offset)
@@ -138,7 +139,7 @@ def main(optional_header: Dict[str, str]) -> None:
     # 调用LOFTER API，抓取tag下内容
     print(f"{cl.get_colour('BLUE')}抓取帖子ID-第{n+1}次: {get_time()}{cl.reset()}")
     proxy = get_proxies(1, proxies_or_not)[0]   # 获取1个代理
-    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10 * n, proxy=proxy)
+    response = lofter_api.request_lofter_with_custom_params(optional_header, offset=10*n, proxy=proxy)
 
     if not response:
         raise RuntimeError("没有获取到数据，可能是网络问题或API超出范围。")
@@ -258,6 +259,45 @@ def main(optional_header: Dict[str, str]) -> None:
     print('\n' + f'=' * 80 + '\n')
     print(cl.reset())
 
+def stedtime() -> tuple[str, str, str]:
+    recent = '0'
+    try:
+        with open('tags/config.yaml', 'r', encoding='utf-8') as f:
+            d = yaml.safe_load(f)
+            stime = datetime.datetime.strptime(str(d.get('start-time'))+' 00:00:00', '%Y-%m-%d %H:%M:%S') if d.get('start-time') else ''
+            etime = datetime.datetime.strptime(str(d.get('end-time'))+' 23:59:59', '%Y-%m-%d %H:%M:%S') if d.get('end-time') else ''
+        if stime and etime and d.get('type') == 'total':
+            recent = '-1'
+            if max(stime, etime) > datetime.datetime.now():
+                raise ValueError(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 中的 start-time 或 end-time 不能晚于当前时间，请检查后重新运行。{cl.reset()}")
+            if stime > etime:
+                raise ValueError(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 中的 start-time 不能晚于 end-time，请检查后重新运行。{cl.reset()}")
+            time_diff = etime - stime
+            if time_diff.days > 30:
+                raise ValueError(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 中的 start-time 和 end-time 之间的时间跨度不能超过30天，请检查后重新运行。{cl.reset()}")
+        elif stime and etime and d.get('type') != 'total':
+            raise ValueError(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 中的 start-time 和 end-time 只能在 type 为 total 时使用，请检查后重新运行。{cl.reset()}")
+        elif not stime and not etime:
+            pass
+        else:
+            raise ValueError(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 中的 start-time 和 end-time 必须同时填写或同时留空，请检查后重新运行。{cl.reset()}")
+        stimestamp = str(round(datetime.datetime.timestamp(stime)*1000)) if stime else '0'
+        etimestamp = str(round(datetime.datetime.timestamp(etime)*1000)) if etime else '0'
+        return stimestamp, etimestamp, recent
+
+    except FileNotFoundError:
+        print(f"{cl.get_colour('RED')}配置文件 tags/config.yaml 未找到，请确保文件存在。{cl.reset()}")
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"{cl.get_colour('RED')}配置文件解析错误: {e}{cl.reset()}")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"{cl.get_colour('RED')}填写时间有误：{e}{cl.reset()}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"{cl.get_colour('RED')}加载配置文件时发生未知错误: {e}{cl.reset()}")
+        sys.exit(1)
+
 if __name__ == "__main__":
 
     start_time=time.time()
@@ -265,10 +305,13 @@ if __name__ == "__main__":
     print(cl.get_colour('CYAN'))
     print('\n' + f'=' * 80 + '\n')
     print(cl.reset())
-
+    stimestamp, etimestamp, recent = stedtime()
     optional_header={
         'tag': load_config('tag'), # 标签，自行填写
-        'type': load_config('type') #date, week, month, total
+        'type': load_config('type'), #date, week, month, total
+        'postYmdSt': stimestamp,
+        'postYmdEt': etimestamp,
+        'recentDay': recent
     }
 
     main(optional_header)
