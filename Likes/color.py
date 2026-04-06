@@ -16,12 +16,12 @@ class Color:
             "BG_GREEN": "\033[42m",
             "BG_YELLOW": "\033[43m",
         }
-    def get_colour(self, colour_name:str|list) -> Optional[str]:
+    def get_colour(self, colour_name:str|list[str]) -> Optional[str]:
         try:
             if isinstance(colour_name, list):
-                return ''.join([self.colour[x] for x in colour_name])
+                return ''.join([self.colour[x.upper()] for x in colour_name])
             if isinstance(colour_name,str):
-                return self.colour[colour_name]
+                return self.colour[colour_name.upper()]
         except KeyError as _:
             raise KeyError(f'Colour {colour_name} not found.')
     def reset(self) -> str:

@@ -1,0 +1,32 @@
+# Required
+# Tag name to crawl.
+tag: OC
+
+# date / week / month / total
+type: total
+
+# Run range [start, end), each run fetches 10 posts by offset.
+turn:
+  - 0
+  - 6
+
+# Optional specific run offsets, higher priority than turn.
+# specified:
+#   - 0
+#   - 3
+
+# Optional likes filter. Leave empty to disable.
+likes:
+
+# Optional time range, valid only when type=total.
+start-time:
+end-time:
+
+# Performance
+max_workers: 5
+max_concurrent_processes: 3
+detail_workers: 4
+
+# Optional overrides
+contents_root: G:\Lofter\Contents
+# proxy_api_path: NewTags/proxy_api.txt

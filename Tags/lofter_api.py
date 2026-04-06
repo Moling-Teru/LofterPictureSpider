@@ -34,8 +34,8 @@ def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, 
     # 构建请求头（保留指定的几项）
     headers = {
         "x-device": "",
-        "lofproduct": "lofter-android-8.2.23",
-        "user-agent": "LOFTER-Android 8.2.23 (RMX3888; Android 9; null) WIFI",
+        "lofproduct": "lofter-android-8.2.34",
+        "user-agent": "LOFTER-Android 8.2.34 (RMX3888; Android 12; null) WIFI",
         "accept-encoding": "gzip",  # 只使用gzip，避免brotli
         "content-type": "application/x-www-form-urlencoded; charset=utf-8",
         # content-length 会由 requests 自动计算
@@ -73,7 +73,7 @@ def request_lofter_tag_posts(tag: str, offset: str = "0") -> Optional[Dict[str, 
         return None
 
 
-def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, proxy: Dict = None) -> Optional[Dict[str, Any]]:
+def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, proxy: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
     """
     使用自定义参数请求LOFTER API
     
@@ -108,7 +108,7 @@ def request_lofter_with_custom_params(body_params: Dict[str, str], offset: int, 
     headers = {
         "x-device": "",
         "lofproduct": "lofter-android-8.2.34",
-        "user-agent": "LOFTER-Android 8.2.34 (RMX3888; Android 9; null) WIFI",
+        "user-agent": "LOFTER-Android 8.2.34 (RMX3888; Android 12; null) WIFI",
         "accept-encoding": "gzip",  # 只使用gzip，避免brotli
         "content-type": "application/x-www-form-urlencoded; charset=utf-8"
     }

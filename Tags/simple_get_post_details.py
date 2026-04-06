@@ -6,7 +6,7 @@ s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=3))
 s.mount('https://', HTTPAdapter(max_retries=3))
 
-def get_post_details(post_id, blog_domain: str, proxy: dict = None) -> Optional[Dict[str, Any]]:
+def get_post_details(post_id, blog_domain: str, proxy: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
     """
     根据帖子ID获取帖子详情的原始JSON数据
     

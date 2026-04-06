@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import get_video
 import extract_post_ids, just_get_it, get_article, lofter_api
 import datetime, time
 import simple_get_post_details
@@ -69,7 +70,7 @@ class GetPostDetails:
         self.content_type = info[1]
         """
         Input:
-        id: tuple 第一项list：[帖子ID, 作者域名]  第二项int: 0-文字，1-图片
+        id: tuple 第一项list：[帖子ID, 作者域名]  第二项int: 0-文字，1-图片，2-视频
         """
         self.content = simple_get_post_details.get_post_details(self.id, self.domain, proxy)
         print(f"帖子ID & 作者域名: [{self.id}, {self.domain}]")
@@ -81,6 +82,9 @@ class GetPostDetails:
                 url = resolve_url.resolve(js_result)  #初步解析图片链接部分
             elif self.content_type == 0:  #文字
                 url = get_article.resolve(js_result)  #提取文字内容部分
+            elif self.content_type == 2:  #视频
+                url = get_video.resolve(js_result)  #提取视频链接部分
+            # 此处本不需要修改，因为GetPostDetails类只用于0,1，视频部分在main中直接处理
             else:
                 raise ValueError("未知的内容类型")
 
@@ -105,7 +109,7 @@ class GetPostDetails:
     def get_type(self) -> int:
         """
         获取内容类型
-        :return: 0-文字，1-图片
+        :return: 0-文字，1-图片，2-视频
         """
         return self.content_type
     
@@ -150,7 +154,8 @@ def main(optional_header: Dict[str, str]) -> None:
 
     # 交给extract_post_ids处理，分析帖子ID
     posts = extract_post_ids.extract_post_ids(response)
-    likes, likes_low = extract_post_ids.get_likes(response)
+    likes_result = extract_post_ids.get_likes(response)
+    likes, likes_low = likes_result if likes_result is not None else (None, None)
     print(f"分析完成: {get_time()}")
 
     # 处理喜欢数不满足跳出
@@ -178,6 +183,8 @@ def main(optional_header: Dict[str, str]) -> None:
     content_types_list = []
     # todo: 分流图片和文字
     for info in posts:  #posts结构：([a,b],c)
+        if info is None:
+            continue
         if info[1] in [0,1]:
             p = GetPostDetails(info, proxy)  # 进入拉取单个帖子请求阶段
             url = p()
@@ -187,17 +194,17 @@ def main(optional_header: Dict[str, str]) -> None:
             domain = p.get_info()[1]  # 获取作者域名
             title = p.get_title()  # 获取帖子标题
             #todo: 批量下载帖子内容转移至循环内部，内存优化
-            if url is None:   # 统计无效链接的数量
+            if url is None or gift is None:   # 统计无效链接的数量
                 none_all += 1
             else:
                 url_all += 1
-            results = resolve_url.fetch(url, c_type, id, domain, title, gift)
-            for i in results[0]:
-                content_lists.append(i)
-            error_count = results[1]
-            errors += error_count  # 统计无效链接的数量
-            for i in range(len(results[0])):
-                content_types_list.append(results[2])
+                results = resolve_url.fetch(url, c_type, id, domain, title, gift)
+                for i in results[0]:
+                    content_lists.append(i)
+                error_count = results[1]
+                errors += error_count  # 统计无效链接的数量
+                for i in range(len(results[0])):
+                    content_types_list.append(results[2])
         elif info[1] == 2:  # 视频
             url_all += 1
             content_lists.append(info[0])
